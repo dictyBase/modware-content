@@ -118,8 +118,8 @@ func (s *ContentService) StoreContent(ctx context.Context, r content.StoreConten
 	dbct := s.createAttrTodbContentCore(r.Data.Attributes)
 	dbct.NamespaceId = namespaceId
 	ctcolumns := aphgrpc.GetDefinedTags(dbct, "db")
-	err := tx.InsertInto(contentDbTable).
-		Columns(ctcolumns).
+	err = tx.InsertInto(contentDbTable).
+		Columns(ctcolumns...).
 		Record(dbct).
 		Returning(prKeyCol, "created_at").
 		QueryScalar(&ctId, &at)
@@ -131,7 +131,7 @@ func (s *ContentService) StoreContent(ctx context.Context, r content.StoreConten
 	tx.Commit()
 	s.SetBaseURL(ctx)
 	grpc.SetTrailer(ctx, metadata.Pairs("method", "POST"))
-	attr := s.dbCoreToResourceAttributes(dct)
+	attr := s.dbCoreToResourceAttributes(dbct)
 	attr.CreatedAt = aphgrpc.NullToTime(at)
 	attr.UpdatedAt = attr.CreatedAt
 	attr.Namespace = r.Data.Attributes.Namespace
@@ -140,7 +140,7 @@ func (s *ContentService) StoreContent(ctx context.Context, r content.StoreConten
 
 func (s *ContentService) UpdateContent(ctx context.Context, r content.UpdateContentRequest) (*content.Content, error) {
 	if err := s.existsResource(r.Id); err != nil {
-		return &empty.Empty{}, aphgrpc.HandleError(ctx, err)
+		return &content.Content{}, aphgrpc.HandleError(ctx, err)
 	}
 	if err := r.Data.Attributes.Validate(); err != nil {
 		grpc.SetTrailer(ctx, aphgrpc.ErrDatabaseUpdate)
@@ -164,7 +164,7 @@ func (s *ContentService) UpdateContent(ctx context.Context, r content.UpdateCont
 		return &content.Content{}, status.Error(codes.Internal, err.Error())
 	}
 	var namespace string
-	err := tx.Select("name").From(namespaceDbTable).
+	err = tx.Select("name").From(namespaceDbTable).
 		Where("namespace_id = $1", dbct.NamespaceId).QueryScalar(&namespace)
 	if err != nil {
 		grpc.SetTrailer(ctx, aphgrpc.ErrDatabaseUpdate)
@@ -172,7 +172,7 @@ func (s *ContentService) UpdateContent(ctx context.Context, r content.UpdateCont
 	}
 	tx.Commit()
 	s.SetBaseURL(ctx)
-	attr := s.attrTodbContentCore(dbct)
+	attr := s.dbCoreToResourceAttributes(dbct)
 	attr.Namespace = namespace
 	return s.buildResource(dbct.ContentId, attr), nil
 }
@@ -269,14 +269,14 @@ func (s *ContentService) buildResource(id int64, attr *content.ContentAttributes
 // Functions that generates resource objects or parts of it from database mapped objects
 func (s *ContentService) dbToResourceAttributes(dct *dbContent) *content.ContentAttributes {
 	return &content.ContentAttributes{
-		Name:      dct.Name,
-		Slug:      dct.Slug,
-		CreatedBy: dct.CreatedBy,
-		UpdatedBy: dct.UpdatedBy,
-		Content:   dct.Content,
-		Namespace: dct.Namespace,
+		Name:      aphgrpc.NullToString(dct.Name),
+		Slug:      aphgrpc.NullToString(dct.Slug),
+		CreatedBy: aphgrpc.NullToInt64(dct.CreatedBy),
+		UpdatedBy: aphgrpc.NullToInt64(dct.UpdatedBy),
+		Namespace: aphgrpc.NullToString(dct.Namespace),
 		CreatedAt: aphgrpc.NullToTime(dct.CreatedAt),
 		UpdatedAt: aphgrpc.NullToTime(dct.UpdatedAt),
+		Content:   dct.Content,
 	}
 }
 
@@ -306,7 +306,7 @@ func (s *ContentService) attrTodbContent(attr *content.ContentAttributes) *dbCon
 	}
 }
 
-func (s *ContentService) attrTodbContentCore(attr *content.ContentAttributes) *dbContent {
+func (s *ContentService) attrTodbContentCore(attr *content.ContentAttributes) *dbContentCore {
 	return &dbContentCore{
 		Name:      dat.NullStringFrom(attr.Name),
 		Slug:      dat.NullStringFrom(attr.Slug),
@@ -333,5 +333,5 @@ func (s *ContentService) createAttrTodbContentCore(attr *content.NewContentAttri
 }
 
 func slug(s string) string {
-	return strings.Trim(re.ReplaceAllString(strings.ToLower(s), "-"), "-")
+	return strings.Trim(noncharReg.ReplaceAllString(strings.ToLower(s), "-"), "-")
 }
