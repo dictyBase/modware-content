@@ -78,7 +78,7 @@ func NewContentService(dbh *runner.DB, pathPrefix string) *ContentService {
 	}
 }
 
-func (s *ContentService) GetContent(ctx context.Context, r content.ContentRequest) (*content.Content, error) {
+func (s *ContentService) GetContent(ctx context.Context, r *content.ContentRequest) (*content.Content, error) {
 	s.SetBaseURL(ctx)
 	ct, err := s.getResourceBySlug(r.Slug)
 	if err != nil {
@@ -87,7 +87,7 @@ func (s *ContentService) GetContent(ctx context.Context, r content.ContentReques
 	return ct, nil
 }
 
-func (s *ContentService) GetContentById(ctx context.Context, r content.ContentIdRequest) (*content.Content, error) {
+func (s *ContentService) GetContentById(ctx context.Context, r *content.ContentIdRequest) (*content.Content, error) {
 	s.SetBaseURL(ctx)
 	ct, err := s.getResource(r.Id)
 	if err != nil {
@@ -97,7 +97,7 @@ func (s *ContentService) GetContentById(ctx context.Context, r content.ContentId
 
 }
 
-func (s *ContentService) StoreContent(ctx context.Context, r content.StoreContentRequest) (*content.Content, error) {
+func (s *ContentService) StoreContent(ctx context.Context, r *content.StoreContentRequest) (*content.Content, error) {
 	if err := r.Data.Attributes.Validate(); err != nil {
 		grpc.SetTrailer(ctx, aphgrpc.ErrDatabaseInsert)
 		return &content.Content{}, status.Error(codes.InvalidArgument, err.Error())
@@ -138,7 +138,7 @@ func (s *ContentService) StoreContent(ctx context.Context, r content.StoreConten
 	return s.buildResource(ctId, attr), nil
 }
 
-func (s *ContentService) UpdateContent(ctx context.Context, r content.UpdateContentRequest) (*content.Content, error) {
+func (s *ContentService) UpdateContent(ctx context.Context, r *content.UpdateContentRequest) (*content.Content, error) {
 	if err := s.existsResource(r.Id); err != nil {
 		return &content.Content{}, aphgrpc.HandleError(ctx, err)
 	}
@@ -177,7 +177,7 @@ func (s *ContentService) UpdateContent(ctx context.Context, r content.UpdateCont
 	return s.buildResource(dbct.ContentId, attr), nil
 }
 
-func (s *ContentService) DeleteContent(ctx context.Context, r content.ContentIdRequest) (*empty.Empty, error) {
+func (s *ContentService) DeleteContent(ctx context.Context, r *content.ContentIdRequest) (*empty.Empty, error) {
 	if err := s.existsResource(r.Id); err != nil {
 		return &empty.Empty{}, aphgrpc.HandleError(ctx, err)
 	}
