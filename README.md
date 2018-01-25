@@ -30,8 +30,8 @@ GLOBAL OPTIONS:
 
 ```
 ## API
-### [HTTP/JSON](https://dictybase.github.io/dictybase-api)
-### gRPC 
+#### [HTTP/JSON](https://dictybase.github.io/dictybase-api)
+#### gRPC 
 The protocol buffer definitions and service apis are documented
 [here](https://github.com/dictyBase/dictybaseapis/tree/master/dictybase/content).
 
