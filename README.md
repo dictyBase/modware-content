@@ -1,7 +1,7 @@
 # modware-user
 [dictyBase](http://dictybase.org) **API** server that uses [dictycontent
 backend](https://github.com/dictybase-docker/dictycontent-postgres) to manage
-the data from rich text editor frontend. The API server supports both gRPC and
+data from rich text editor frontend. The API server supports both gRPC and
 HTTP/JSON protocol for data exchange.
 
 ## Usage
@@ -30,7 +30,8 @@ GLOBAL OPTIONS:
 
 ```
 ## API
-#### [HTTP/JSON](https://dictybase.github.io/dictybase-api)
+#### HTTP/JSON
+It's [here](https://dictybase.github.io/dictybase-api), make sure you use the content from the dropdown on the top right.
 #### gRPC 
 The protocol buffer definitions and service apis are documented
 [here](https://github.com/dictyBase/dictybaseapis/tree/master/dictybase/content).
