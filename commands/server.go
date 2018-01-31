@@ -70,7 +70,7 @@ func RunServer(c *cli.Context) error {
 	log.Printf("starting multiplexed  server on %s", endP)
 	var failed bool
 	if err := m.Serve(); err != nil {
-		log.Printf("cmux serve error: %v", err)
+		log.Printf("cmux server error: %v", err)
 		failed = true
 	}
 	i := 0

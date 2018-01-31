@@ -41,15 +41,16 @@ var contentCols = []string{
 var noncharReg = regexp.MustCompile("[^a-z0-9]+")
 
 type dbContent struct {
-	ContentId int64          `db:"content_id"`
-	Name      dat.NullString `db:"name"`
-	Slug      dat.NullString `db:"slug"`
-	CreatedBy dat.NullInt64  `db:"created_by"`
-	UpdatedBy dat.NullInt64  `db:"updated_by"`
-	CreatedAt dat.NullTime   `db:"created_at"`
-	UpdatedAt dat.NullTime   `db:"updated_at"`
-	Namespace dat.NullString `db:"namespace"`
-	Content   string         `db:"content"`
+	ContentId   int64          `db:"content_id"`
+	Name        dat.NullString `db:"name"`
+	Slug        dat.NullString `db:"slug"`
+	CreatedBy   dat.NullInt64  `db:"created_by"`
+	UpdatedBy   dat.NullInt64  `db:"updated_by"`
+	CreatedAt   dat.NullTime   `db:"created_at"`
+	UpdatedAt   dat.NullTime   `db:"updated_at"`
+	Namespace   dat.NullString `db:"namespace"`
+	NamespaceId int64          `db:"namespace_id"`
+	Content     string         `db:"content"`
 }
 
 type dbContentCore struct {
