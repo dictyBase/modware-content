@@ -102,15 +102,27 @@ func (s *ContentService) StoreContent(ctx context.Context, r *content.StoreConte
 		grpc.SetTrailer(ctx, aphgrpc.ErrDatabaseInsert)
 		return &content.Content{}, status.Error(codes.InvalidArgument, err.Error())
 	}
-	var namespaceId int64
 	tx, _ := s.Dbh.Begin()
 	defer tx.AutoRollback()
-	err := tx.InsertInto(namespaceDbTable).
-		Columns("name").Values(r.Data.Attributes.Namespace).
-		Returning("namespace_id").QueryScalar(&namespaceId)
+	// Check if namespace exists
+	var namespaceId int64
+	err := tx.Select("namespace_id").From(namespaceDbTable).
+		Where("name = $1", r.Data.Attributes.Namespace).QueryScalar(&namespaceId)
 	if err != nil {
-		grpc.SetTrailer(ctx, aphgrpc.ErrDatabaseInsert)
-		return &content.Content{}, status.Error(codes.Internal, err.Error())
+		if !strings.Contains(err.Error(), "no rows") {
+			grpc.SetTrailer(ctx, aphgrpc.ErrDatabaseUpdate)
+			return &content.Content{}, status.Error(codes.Internal, err.Error())
+		}
+	}
+
+	if strings.Contains(err.Error(), "no rows") {
+		err := tx.InsertInto(namespaceDbTable).
+			Columns("name").Values(r.Data.Attributes.Namespace).
+			Returning("namespace_id").QueryScalar(&namespaceId)
+		if err != nil {
+			grpc.SetTrailer(ctx, aphgrpc.ErrDatabaseInsert)
+			return &content.Content{}, status.Error(codes.Internal, err.Error())
+		}
 	}
 
 	var ctId int64
@@ -152,7 +164,7 @@ func (s *ContentService) UpdateContent(ctx context.Context, r *content.UpdateCon
 	err := tx.Update(contentDbTable).
 		Set("updated_by", r.Data.Attributes.UpdatedBy).
 		Set("content", r.Data.Attributes.Content).
-		Where("content_id = $1", r.Id).
+		Where(prKeyCol+"= $1", r.Id).
 		Returning(contentCols...).
 		QueryStruct(dbct)
 	if err != nil {
@@ -178,7 +190,7 @@ func (s *ContentService) DeleteContent(ctx context.Context, r *content.ContentId
 		return &empty.Empty{}, aphgrpc.HandleError(ctx, err)
 	}
 	tx, _ := s.Dbh.Begin()
-	tx.AutoRollback()
+	defer tx.AutoRollback()
 	_, err := tx.DeleteFrom(contentDbTable).Where(prKeyCol+" = $1", r.Id).Exec()
 	if err != nil {
 		grpc.SetTrailer(ctx, aphgrpc.ErrDatabaseDelete)

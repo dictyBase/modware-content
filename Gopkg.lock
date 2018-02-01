@@ -20,7 +20,7 @@
     "aphcollection",
     "aphgrpc"
   ]
-  revision = "bf432a73eb49e2de95771756abfc0129b79992b9"
+  revision = "ccc1a39c38f124f7809f8e58c7a6d4bfe1e4c0f8"
 
 [[projects]]
   branch = "master"
@@ -382,16 +382,6 @@
   ]
   revision = "6b51017f791ae1cfbec89c52efdf444b13b550ef"
   version = "v1.9.2"
-
-[[projects]]
-  name = "gopkg.in/mgutz/dat.v1"
-  packages = [
-    ".",
-    "common",
-    "reflectx"
-  ]
-  revision = "c2a5759ae4b0303a8bf640d01a85ae3acc02455d"
-  version = "v1.1.10"
 
 [[projects]]
   branch = "v2"
