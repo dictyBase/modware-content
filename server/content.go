@@ -10,9 +10,8 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/status"
-	dat "gopkg.in/mgutz/dat.v1"
-
-	"gopkg.in/mgutz/dat.v1/sqlx-runner"
+	dat "gopkg.in/mgutz/dat.v2/dat"
+	runner "gopkg.in/mgutz/dat.v2/sqlx-runner"
 
 	"github.com/dictyBase/apihelpers/aphgrpc"
 	"github.com/dictyBase/go-genproto/dictybaseapis/api/jsonapi"
@@ -50,7 +49,7 @@ type dbContent struct {
 	UpdatedAt   dat.NullTime   `db:"updated_at"`
 	Namespace   dat.NullString `db:"namespace"`
 	NamespaceId int64          `db:"namespace_id"`
-	Content     string         `db:"content"`
+	Content     dat.JSON       `db:"content"`
 }
 
 type dbContentCore struct {
@@ -62,7 +61,7 @@ type dbContentCore struct {
 	CreatedAt   dat.NullTime   `db:"created_at"`
 	UpdatedAt   dat.NullTime   `db:"updated_at"`
 	NamespaceId int64          `db:"namespace_id"`
-	Content     string         `db:"content"`
+	Content     dat.JSON       `db:"content"`
 }
 
 type ContentService struct {
@@ -149,17 +148,13 @@ func (s *ContentService) UpdateContent(ctx context.Context, r *content.UpdateCon
 	}
 	dbct := &dbContentCore{}
 	tx, _ := s.Dbh.Begin()
-	tx.AutoRollback()
+	defer tx.AutoRollback()
 	err := tx.Update(contentDbTable).
-		SetMap(
-			map[string]interface{}{
-				"updated_by": r.Data.Attributes.UpdatedBy,
-				"content":    r.Data.Attributes.Content,
-			},
-		).
-		Where(prKeyCol+" = $1", r.Id).
-		Returning(contentCols...).
-		QueryStruct(dbct)
+		Set("updated_by", r.Data.Attributes.UpdatedBy).
+		Set("content", r.Data.Attributes.Content).
+		Where("content_id = $1", r.Id).
+		Returning(contentCols...)
+	QueryStruct(dbct)
 	if err != nil {
 		grpc.SetTrailer(ctx, aphgrpc.ErrDatabaseUpdate)
 		return &content.Content{}, status.Error(codes.Internal, err.Error())
@@ -269,6 +264,7 @@ func (s *ContentService) buildResource(id int64, attr *content.ContentAttributes
 
 // Functions that generates resource objects or parts of it from database mapped objects
 func (s *ContentService) dbToResourceAttributes(dct *dbContent) *content.ContentAttributes {
+	ct, _ := dct.Content.Interpolate()
 	return &content.ContentAttributes{
 		Name:      aphgrpc.NullToString(dct.Name),
 		Slug:      aphgrpc.NullToString(dct.Slug),
@@ -277,11 +273,12 @@ func (s *ContentService) dbToResourceAttributes(dct *dbContent) *content.Content
 		Namespace: aphgrpc.NullToString(dct.Namespace),
 		CreatedAt: aphgrpc.NullToTime(dct.CreatedAt),
 		UpdatedAt: aphgrpc.NullToTime(dct.UpdatedAt),
-		Content:   dct.Content,
+		Content:   ct,
 	}
 }
 
 func (s *ContentService) dbCoreToResourceAttributes(dct *dbContentCore) *content.ContentAttributes {
+	ct, _ := dct.Content.Interpolate()
 	return &content.ContentAttributes{
 		Name:      aphgrpc.NullToString(dct.Name),
 		Slug:      aphgrpc.NullToString(dct.Slug),
@@ -289,7 +286,7 @@ func (s *ContentService) dbCoreToResourceAttributes(dct *dbContentCore) *content
 		UpdatedBy: aphgrpc.NullToInt64(dct.UpdatedBy),
 		CreatedAt: aphgrpc.NullToTime(dct.CreatedAt),
 		UpdatedAt: aphgrpc.NullToTime(dct.UpdatedAt),
-		Content:   dct.Content,
+		Content:   ct,
 	}
 }
 
@@ -303,7 +300,7 @@ func (s *ContentService) attrTodbContent(attr *content.ContentAttributes) *dbCon
 		CreatedAt: dat.NullTimeFrom(aphgrpc.ProtoTimeStamp(attr.CreatedAt)),
 		UpdatedAt: dat.NullTimeFrom(aphgrpc.ProtoTimeStamp(attr.UpdatedAt)),
 		Namespace: dat.NullStringFrom(attr.Namespace),
-		Content:   attr.Content,
+		Content:   dat.JSONFromString(attr.Content),
 	}
 }
 
@@ -315,7 +312,7 @@ func (s *ContentService) attrTodbContentCore(attr *content.ContentAttributes) *d
 		UpdatedBy: dat.NullInt64From(attr.UpdatedBy),
 		CreatedAt: dat.NullTimeFrom(aphgrpc.ProtoTimeStamp(attr.CreatedAt)),
 		UpdatedAt: dat.NullTimeFrom(aphgrpc.ProtoTimeStamp(attr.UpdatedAt)),
-		Content:   attr.Content,
+		Content:   dat.JSONFromString(attr.Content),
 	}
 }
 
@@ -324,7 +321,7 @@ func (s *ContentService) createAttrTodbContentCore(attr *content.NewContentAttri
 		Name:      dat.NullStringFrom(attr.Name),
 		CreatedBy: dat.NullInt64From(attr.CreatedBy),
 		UpdatedBy: dat.NullInt64From(attr.CreatedBy),
-		Content:   attr.Content,
+		Content:   dat.JSONFromString(attr.Content),
 		Slug: dat.NullStringFrom(
 			slug(
 				fmt.Sprintf("%s %s", attr.Namespace, attr.Name),
