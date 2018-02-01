@@ -153,8 +153,8 @@ func (s *ContentService) UpdateContent(ctx context.Context, r *content.UpdateCon
 		Set("updated_by", r.Data.Attributes.UpdatedBy).
 		Set("content", r.Data.Attributes.Content).
 		Where("content_id = $1", r.Id).
-		Returning(contentCols...)
-	QueryStruct(dbct)
+		Returning(contentCols...).
+		QueryStruct(dbct)
 	if err != nil {
 		grpc.SetTrailer(ctx, aphgrpc.ErrDatabaseUpdate)
 		return &content.Content{}, status.Error(codes.Internal, err.Error())
