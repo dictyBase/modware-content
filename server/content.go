@@ -109,18 +109,16 @@ func (s *ContentService) StoreContent(ctx context.Context, r *content.StoreConte
 	err := tx.Select("namespace_id").From(namespaceDbTable).
 		Where("name = $1", r.Data.Attributes.Namespace).QueryScalar(&namespaceId)
 	if err != nil {
-		if !strings.Contains(err.Error(), "no rows") {
+		if strings.Contains(err.Error(), "no rows") {
+			err := tx.InsertInto(namespaceDbTable).
+				Columns("name").Values(r.Data.Attributes.Namespace).
+				Returning("namespace_id").QueryScalar(&namespaceId)
+			if err != nil {
+				grpc.SetTrailer(ctx, aphgrpc.ErrDatabaseInsert)
+				return &content.Content{}, status.Error(codes.Internal, err.Error())
+			}
+		} else {
 			grpc.SetTrailer(ctx, aphgrpc.ErrDatabaseUpdate)
-			return &content.Content{}, status.Error(codes.Internal, err.Error())
-		}
-	}
-
-	if strings.Contains(err.Error(), "no rows") {
-		err := tx.InsertInto(namespaceDbTable).
-			Columns("name").Values(r.Data.Attributes.Namespace).
-			Returning("namespace_id").QueryScalar(&namespaceId)
-		if err != nil {
-			grpc.SetTrailer(ctx, aphgrpc.ErrDatabaseInsert)
 			return &content.Content{}, status.Error(codes.Internal, err.Error())
 		}
 	}
