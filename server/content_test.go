@@ -289,7 +289,7 @@ func TestUpdate(t *testing.T) {
 	}
 	defer conn.Close()
 	client := pb.NewContentServiceClient(conn)
-	nct, err := client.StoreContent(context.Background(), NewStoreContent("payment information"))
+	nct, err := client.StoreContent(context.Background(), NewStoreContent("plasmid catalog"))
 	if err != nil {
 		t.Fatalf("could not store the content %s\n", err)
 	}
@@ -329,5 +329,22 @@ func TestUpdate(t *testing.T) {
 	}
 	if cjson.Text != "text" {
 		t.Fatalf("expected json field text %s did not match %s", "text", cjson.Text)
+	}
+}
+
+func TesDelete(t *testing.T) {
+	conn, err := grpc.Dial("localhost"+port, grpc.WithInsecure())
+	if err != nil {
+		t.Fatalf("could not connect to grpc server %s\n", err)
+	}
+	defer conn.Close()
+	client := pb.NewContentServiceClient(conn)
+	nct, err := client.StoreContent(context.Background(), NewStoreContent("deposit information"))
+	if err != nil {
+		t.Fatalf("could not store the content %s\n", err)
+	}
+	_, err = client.DeleteContent(context.Background(), &pb.ContentIdRequest{Id: nct.Data.Id})
+	if err != nil {
+		t.Fatalf("could not delete content by %d Id", nct.Data.Id)
 	}
 }
