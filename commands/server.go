@@ -16,11 +16,13 @@ import (
 	"github.com/soheilhy/cmux"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
-	"gopkg.in/mgutz/dat.v1/sqlx-runner"
+	dat "gopkg.in/mgutz/dat.v2/dat"
+	runner "gopkg.in/mgutz/dat.v2/sqlx-runner"
 	"gopkg.in/urfave/cli.v1"
 )
 
 func RunServer(c *cli.Context) error {
+	dat.EnableInterpolation = true
 	dbh, err := getPgWrapper(c)
 	if err != nil {
 		return cli.NewExitError(
