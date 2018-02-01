@@ -78,7 +78,7 @@ func NewContentService(dbh *runner.DB, pathPrefix string) *ContentService {
 	}
 }
 
-func (s *ContentService) GetContent(ctx context.Context, r *content.ContentRequest) (*content.Content, error) {
+func (s *ContentService) GetContentBySlug(ctx context.Context, r *content.ContentRequest) (*content.Content, error) {
 	s.SetBaseURL(ctx)
 	ct, err := s.getResourceBySlug(r.Slug)
 	if err != nil {
@@ -87,7 +87,7 @@ func (s *ContentService) GetContent(ctx context.Context, r *content.ContentReque
 	return ct, nil
 }
 
-func (s *ContentService) GetContentById(ctx context.Context, r *content.ContentIdRequest) (*content.Content, error) {
+func (s *ContentService) GetContent(ctx context.Context, r *content.ContentIdRequest) (*content.Content, error) {
 	s.SetBaseURL(ctx)
 	ct, err := s.getResource(r.Id)
 	if err != nil {
