@@ -16,35 +16,35 @@ func main() {
 	app.Version = "1.0.0"
 	app.Flags = []cli.Flag{
 		cli.StringFlag{
-			Name:   "dictycontent-pass",
+			Name:   "dictycontent-pass,p",
 			EnvVar: "DICTYCONTENT_PASS",
 			Usage:  "dictycontent database password",
 		},
 		cli.StringFlag{
-			Name:   "dictycontent-db",
+			Name:   "dictycontent-db,db",
 			EnvVar: "DICTYCONTENT_DB",
 			Usage:  "dictycontent database name",
 		},
 		cli.StringFlag{
-			Name:   "dictycontent-user",
+			Name:   "dictycontent-user,u",
 			EnvVar: "DICTYCONTENT_USER",
 			Usage:  "dictycontent database user",
 		},
 		cli.StringFlag{
-			Name:   "dictycontent-host",
+			Name:   "dictycontent-host,H",
 			Value:  "dictycontent-backend",
 			EnvVar: "DICTYCONTENT_BACKEND_SERVICE_HOST",
 			Usage:  "dictycontent database host",
 		},
 		cli.StringFlag{
-			Name:   "dictycontent-port",
+			Name:   "dictycontent-port,P",
 			EnvVar: "DICTYCONTENT_BACKEND_SERVICE_PORT",
 			Usage:  "dictycontent database port",
 		},
 		cli.StringFlag{
 			Name:  "port",
 			Usage: "tcp port at which the servers will be available",
-			Value: "9597",
+			Value: "9555",
 		},
 	}
 	app.Before = validateArgs
