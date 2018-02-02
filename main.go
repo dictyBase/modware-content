@@ -16,28 +16,28 @@ func main() {
 	app.Version = "1.0.0"
 	app.Flags = []cli.Flag{
 		cli.StringFlag{
-			Name:   "dictycontent-pass,p",
+			Name:   "dictycontent-pass",
 			EnvVar: "DICTYCONTENT_PASS",
 			Usage:  "dictycontent database password",
 		},
 		cli.StringFlag{
-			Name:   "dictycontent-db,db",
+			Name:   "dictycontent-db",
 			EnvVar: "DICTYCONTENT_DB",
 			Usage:  "dictycontent database name",
 		},
 		cli.StringFlag{
-			Name:   "dictycontent-user,u",
+			Name:   "dictycontent-user",
 			EnvVar: "DICTYCONTENT_USER",
 			Usage:  "dictycontent database user",
 		},
 		cli.StringFlag{
-			Name:   "dictycontent-host,H",
+			Name:   "dictycontent-host",
 			Value:  "dictycontent-backend",
 			EnvVar: "DICTYCONTENT_BACKEND_SERVICE_HOST",
 			Usage:  "dictycontent database host",
 		},
 		cli.StringFlag{
-			Name:   "dictycontent-port,P",
+			Name:   "dictycontent-port",
 			EnvVar: "DICTYCONTENT_BACKEND_SERVICE_PORT",
 			Usage:  "dictycontent database port",
 		},
