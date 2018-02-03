@@ -29,7 +29,7 @@
     "dictybaseapis/api/jsonapi",
     "dictybaseapis/content"
   ]
-  revision = "6f2fb5908f63420beb6da61bde96211936f2ffed"
+  revision = "206275a5c0e3b222e8dffa593554d19f17cebe26"
 
 [[projects]]
   name = "github.com/docker/distribution"
@@ -104,6 +104,7 @@
   version = "v0.5"
 
 [[projects]]
+  branch = "master"
   name = "github.com/golang/protobuf"
   packages = [
     "jsonpb",
@@ -116,8 +117,19 @@
     "ptypes/struct",
     "ptypes/timestamp"
   ]
-  revision = "925541529c1fa6821df4e44ce2723319eb2be768"
-  version = "v1.0.0"
+  revision = "bbd03ef6da3a115852eaf24c8a1c46aeb39aa175"
+
+[[projects]]
+  branch = "master"
+  name = "github.com/grpc-ecosystem/go-grpc-middleware"
+  packages = [
+    ".",
+    "logging",
+    "logging/logrus",
+    "tags",
+    "tags/logrus"
+  ]
+  revision = "d0c54e68681ec7999ac17864470f3bee6521ba2b"
 
 [[projects]]
   name = "github.com/grpc-ecosystem/grpc-gateway"
@@ -252,6 +264,12 @@
   version = "v1.0.0"
 
 [[projects]]
+  name = "github.com/sirupsen/logrus"
+  packages = ["."]
+  revision = "d682213848ed68c0a260ca37d6dd5ace8423f5ba"
+  version = "v1.0.4"
+
+[[projects]]
   name = "github.com/soheilhy/cmux"
   packages = ["."]
   revision = "e09e9389d85d8492d313d73d1469c029e710623f"
@@ -292,7 +310,8 @@
     "poly1305",
     "ssh",
     "ssh/agent",
-    "ssh/knownhosts"
+    "ssh/knownhosts",
+    "ssh/terminal"
   ]
   revision = "1875d0a70c90e57f11972aefd42276df65e895b9"
 
@@ -470,6 +489,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "a86fdf5ecd0db58c3ff2edae6149f50bba335f78f77fca868201a45c8bdc2d22"
+  inputs-digest = "8ff1c09f9746dae6328a55d3f1569f287c0f73f0e3c701d6fd41c68ab69a9f93"
   solver-name = "gps-cdcl"
   solver-version = 1

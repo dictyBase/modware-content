@@ -24,7 +24,6 @@
 #   go-tests = true
 #   unused-packages = true
 
-
 [[constraint]]
   branch = "master"
   name = "github.com/dictyBase/apihelpers"
@@ -38,8 +37,8 @@
   version = "1.13.1"
 
 [[constraint]]
+  branch = "master"
   name = "github.com/golang/protobuf"
-  version = "1.0.0"
 
 [[constraint]]
   name = "github.com/grpc-ecosystem/grpc-gateway"
@@ -76,3 +75,11 @@
 [prune]
   go-tests = true
   unused-packages = true
+
+[[constraint]]
+  branch = "master"
+  name = "github.com/grpc-ecosystem/go-grpc-middleware"
+
+[[constraint]]
+  name = "github.com/sirupsen/logrus"
+  version = "1.0.4"
