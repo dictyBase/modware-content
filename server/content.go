@@ -78,6 +78,10 @@ func NewContentService(dbh *runner.DB, pathPrefix string) *ContentService {
 	}
 }
 
+func (s *ContentService) Healthz(ctx context.Context, r *jsonapi.HealthzIdRequest) (*empty.Empty, error) {
+	return &empty.Empty{}, nil
+}
+
 func (s *ContentService) GetContentBySlug(ctx context.Context, r *content.ContentRequest) (*content.Content, error) {
 	s.SetBaseURL(ctx)
 	ct, err := s.getResourceBySlug(r.Slug)
