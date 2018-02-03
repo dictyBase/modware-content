@@ -7,12 +7,17 @@ import (
 	"log"
 	"net"
 	"net/http"
+	"os"
 
 	"github.com/dictyBase/apihelpers/aphgrpc"
 	pb "github.com/dictyBase/go-genproto/dictybaseapis/content"
 	"github.com/dictyBase/modware-content/server"
+	"github.com/grpc-ecosystem/go-grpc-middleware"
+	"github.com/grpc-ecosystem/go-grpc-middleware/logging/logrus"
+	"github.com/grpc-ecosystem/go-grpc-middleware/tags"
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	_ "github.com/jackc/pgx/stdlib"
+	"github.com/sirupsen/logrus"
 	"github.com/soheilhy/cmux"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
@@ -30,7 +35,12 @@ func RunServer(c *cli.Context) error {
 			2,
 		)
 	}
-	grpcS := grpc.NewServer()
+	grpcS := grpc.NewServer(
+		grpc_middleware.WithUnaryServerChain(
+			grpc_ctxtags.UnaryServerInterceptor(),
+			grpc_logrus.UnaryServerInterceptor(getLogger(c)),
+		),
+	)
 	pb.RegisterContentServiceServer(grpcS, server.NewContentService(dbh, "contents"))
 	reflection.Register(grpcS)
 
@@ -111,4 +121,33 @@ func getPgWrapper(c *cli.Context) (*runner.DB, error) {
 		return dbh, err
 	}
 	return runner.NewDB(h, "postgres"), nil
+}
+
+func getLogger(c *cli.Context) *logrus.Entry {
+	log := logrus.New()
+	log.Out = os.Stderr
+	switch c.GlobalString("log-format") {
+	case "text":
+		log.Formatter = &logrus.TextFormatter{
+			TimestampFormat: "02/Jan/2006:15:04:05",
+		}
+	case "json":
+		log.Formatter = &logrus.JSONFormatter{
+			TimestampFormat: "02/Jan/2006:15:04:05",
+		}
+	}
+	l := c.GlobalString("log-level")
+	switch l {
+	case "debug":
+		log.Level = logrus.DebugLevel
+	case "warn":
+		log.Level = logrus.WarnLevel
+	case "error":
+		log.Level = logrus.ErrorLevel
+	case "fatal":
+		log.Level = logrus.FatalLevel
+	case "panic":
+		log.Level = logrus.PanicLevel
+	}
+	return logrus.NewEntry(log)
 }

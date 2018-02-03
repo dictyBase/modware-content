@@ -46,6 +46,16 @@ func main() {
 			Usage: "tcp port at which the servers will be available",
 			Value: "9555",
 		},
+		cli.StringFlag{
+			Name:  "log-format",
+			Usage: "format of the logging out, either of json or text.",
+			Value: "json",
+		},
+		cli.StringFlag{
+			Name:  "log-level",
+			Usage: "log level for the application",
+			Value: "error",
+		},
 	}
 	app.Before = validateArgs
 	app.Action = commands.RunServer
