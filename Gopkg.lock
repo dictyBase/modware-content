@@ -95,6 +95,12 @@
   version = "v1.4.0"
 
 [[projects]]
+  name = "github.com/go-chi/cors"
+  packages = ["."]
+  revision = "dba6525398619dead495962a916728e7ee2ca322"
+  version = "v1.0.0"
+
+[[projects]]
   name = "github.com/gogo/protobuf"
   packages = [
     "proto",
@@ -489,6 +495,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "8ff1c09f9746dae6328a55d3f1569f287c0f73f0e3c701d6fd41c68ab69a9f93"
+  inputs-digest = "f2362da725169a3de014e81139dd7a6ab792c3877db58289f5a1254fb2fc3ae7"
   solver-name = "gps-cdcl"
   solver-version = 1
