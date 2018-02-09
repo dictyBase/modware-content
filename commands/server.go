@@ -78,6 +78,7 @@ func RunServer(c *cli.Context) error {
 	cors := cors.New(cors.Options{
 		AllowedOrigins:     []string{"*"},
 		AllowCredentials:   true,
+		AllowedMethods:     []string{"GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"},
 		OptionsPassthrough: false,
 	})
 	httpS := &http.Server{Handler: cors.Handler(httpMux)}
