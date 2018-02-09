@@ -12,6 +12,7 @@ import (
 	"github.com/dictyBase/apihelpers/aphgrpc"
 	pb "github.com/dictyBase/go-genproto/dictybaseapis/content"
 	"github.com/dictyBase/modware-content/server"
+	"github.com/go-chi/cors"
 	"github.com/grpc-ecosystem/go-grpc-middleware"
 	"github.com/grpc-ecosystem/go-grpc-middleware/logging/logrus"
 	"github.com/grpc-ecosystem/go-grpc-middleware/tags"
@@ -73,7 +74,13 @@ func RunServer(c *cli.Context) error {
 	grpcL := m.Match(cmux.HTTP2HeaderField("content-type", "application/grpc"))
 	httpL := m.Match(cmux.Any())
 
-	httpS := &http.Server{Handler: httpMux}
+	// CORS setup
+	cors := cors.New(cors.Options{
+		AllowedOrigins:     []string{"*"},
+		AllowCredentials:   true,
+		OptionsPassthrough: true,
+	})
+	httpS := &http.Server{Handler: cors.Handler(httpMux)}
 	// collect on this channel the exits of each protocol's .Serve() call
 	ech := make(chan error, 2)
 	// start the listeners for each protocol
