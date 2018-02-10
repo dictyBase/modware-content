@@ -153,8 +153,13 @@ func (s *ContentService) StoreContent(ctx context.Context, r *content.StoreConte
 }
 
 func (s *ContentService) UpdateContent(ctx context.Context, r *content.UpdateContentRequest) (*content.Content, error) {
-	if err := s.existsResource(r.Id); err != nil {
+	result, err := s.existsResource(r.Id)
+	if err != nil {
 		return &content.Content{}, aphgrpc.HandleError(ctx, err)
+	}
+	if !result {
+		grpc.SetTrailer(ctx, aphgrpc.ErrNotFound)
+		return &content.Content{}, status.Error(codes.NotFound, fmt.Sprintf("id %d not found", r.Id))
 	}
 	if err := r.Data.Attributes.Validate(); err != nil {
 		grpc.SetTrailer(ctx, aphgrpc.ErrDatabaseUpdate)
@@ -163,7 +168,7 @@ func (s *ContentService) UpdateContent(ctx context.Context, r *content.UpdateCon
 	dbct := &dbContentCore{}
 	tx, _ := s.Dbh.Begin()
 	defer tx.AutoRollback()
-	err := tx.Update(contentDbTable).
+	err = tx.Update(contentDbTable).
 		Set("updated_by", r.Data.Attributes.UpdatedBy).
 		Set("content", r.Data.Attributes.Content).
 		Where(prKeyCol+"= $1", r.Id).
@@ -188,12 +193,17 @@ func (s *ContentService) UpdateContent(ctx context.Context, r *content.UpdateCon
 }
 
 func (s *ContentService) DeleteContent(ctx context.Context, r *content.ContentIdRequest) (*empty.Empty, error) {
-	if err := s.existsResource(r.Id); err != nil {
+	result, err := s.existsResource(r.Id)
+	if err != nil {
 		return &empty.Empty{}, aphgrpc.HandleError(ctx, err)
+	}
+	if !result {
+		grpc.SetTrailer(ctx, aphgrpc.ErrNotFound)
+		return &empty.Empty{}, status.Error(codes.NotFound, fmt.Sprintf("id %d not found", r.Id))
 	}
 	tx, _ := s.Dbh.Begin()
 	defer tx.AutoRollback()
-	_, err := tx.DeleteFrom(contentDbTable).Where(prKeyCol+" = $1", r.Id).Exec()
+	_, err = tx.DeleteFrom(contentDbTable).Where(prKeyCol+" = $1", r.Id).Exec()
 	if err != nil {
 		grpc.SetTrailer(ctx, aphgrpc.ErrDatabaseDelete)
 		return &empty.Empty{}, status.Error(codes.Internal, err.Error())
@@ -202,8 +212,8 @@ func (s *ContentService) DeleteContent(ctx context.Context, r *content.ContentId
 	return &empty.Empty{}, nil
 }
 
-func (s *ContentService) existsResource(id int64) error {
-	_, err := s.Dbh.Select(
+func (s *ContentService) existsResource(id int64) (bool, error) {
+	r, err := s.Dbh.Select(
 		fmt.Sprintf("%s.%s", contentDbTable, prKeyCol),
 	).From(
 		contentDbTable,
@@ -211,7 +221,13 @@ func (s *ContentService) existsResource(id int64) error {
 		fmt.Sprintf("%s.%s = $1", contentDbTable, prKeyCol),
 		id,
 	).Exec()
-	return err
+	if err != nil {
+		return false, err
+	}
+	if r.RowsAffected != 1 {
+		return false, nil
+	}
+	return true, nil
 }
 
 // -- Functions that queries the storage and generates resource object
