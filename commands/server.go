@@ -80,6 +80,7 @@ func RunServer(c *cli.Context) error {
 		AllowCredentials:   true,
 		AllowedMethods:     []string{"GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"},
 		OptionsPassthrough: false,
+		AllowedHeaders:     []string{"*"},
 	})
 	httpS := &http.Server{Handler: cors.Handler(httpMux)}
 	// collect on this channel the exits of each protocol's .Serve() call
