@@ -83,7 +83,9 @@ func (s *ContentService) Healthz(ctx context.Context, r *jsonapi.HealthzIdReques
 }
 
 func (s *ContentService) GetContentBySlug(ctx context.Context, r *content.ContentRequest) (*content.Content, error) {
-	s.SetBaseURL(ctx)
+	if err := s.SetBaseURL(ctx); err != nil {
+		return &content.Content{}, aphgrpc.HandleError(ctx, err)
+	}
 	ct, err := s.getResourceBySlug(r.Slug)
 	if err != nil {
 		return &content.Content{}, aphgrpc.HandleError(ctx, err)
@@ -92,7 +94,9 @@ func (s *ContentService) GetContentBySlug(ctx context.Context, r *content.Conten
 }
 
 func (s *ContentService) GetContent(ctx context.Context, r *content.ContentIdRequest) (*content.Content, error) {
-	s.SetBaseURL(ctx)
+	if err := s.SetBaseURL(ctx); err != nil {
+		return &content.Content{}, aphgrpc.HandleError(ctx, err)
+	}
 	ct, err := s.getResource(r.Id)
 	if err != nil {
 		return &content.Content{}, aphgrpc.HandleError(ctx, err)
@@ -143,7 +147,9 @@ func (s *ContentService) StoreContent(ctx context.Context, r *content.StoreConte
 	}
 
 	tx.Commit()
-	s.SetBaseURL(ctx)
+	if err := s.SetBaseURL(ctx); err != nil {
+		return &content.Content{}, aphgrpc.HandleError(ctx, err)
+	}
 	grpc.SetTrailer(ctx, metadata.Pairs("method", "POST"))
 	attr := s.dbCoreToResourceAttributes(dbct)
 	attr.CreatedAt = aphgrpc.NullToTime(at)
@@ -186,7 +192,9 @@ func (s *ContentService) UpdateContent(ctx context.Context, r *content.UpdateCon
 		return &content.Content{}, status.Error(codes.Internal, err.Error())
 	}
 	tx.Commit()
-	s.SetBaseURL(ctx)
+	if err := s.SetBaseURL(ctx); err != nil {
+		return &content.Content{}, aphgrpc.HandleError(ctx, err)
+	}
 	attr := s.dbCoreToResourceAttributes(dbct)
 	attr.Namespace = namespace
 	return s.buildResource(dbct.ContentId, attr), nil
