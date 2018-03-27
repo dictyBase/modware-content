@@ -20,7 +20,7 @@
     "aphcollection",
     "aphgrpc"
   ]
-  revision = "506013569998b74b43dd7dd6e51695b71a8696f1"
+  revision = "3c3d35d8ba51dc79af3affc3118629e9e6dfaf12"
 
 [[projects]]
   branch = "master"

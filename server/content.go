@@ -83,7 +83,8 @@ func (s *ContentService) Healthz(ctx context.Context, r *jsonapi.HealthzIdReques
 }
 
 func (s *ContentService) GetContentBySlug(ctx context.Context, r *content.ContentRequest) (*content.Content, error) {
-	if err := s.SetBaseURL(ctx); err != nil {
+	s.Context = ctx
+	if err := s.SetBaseURL(); err != nil {
 		return &content.Content{}, aphgrpc.HandleError(ctx, err)
 	}
 	ct, err := s.getResourceBySlug(r.Slug)
@@ -94,9 +95,11 @@ func (s *ContentService) GetContentBySlug(ctx context.Context, r *content.Conten
 }
 
 func (s *ContentService) GetContent(ctx context.Context, r *content.ContentIdRequest) (*content.Content, error) {
-	if err := s.SetBaseURL(ctx); err != nil {
+	s.Context = ctx
+	if err := s.SetBaseURL(); err != nil {
 		return &content.Content{}, aphgrpc.HandleError(ctx, err)
 	}
+	s.Context = ctx
 	ct, err := s.getResource(r.Id)
 	if err != nil {
 		return &content.Content{}, aphgrpc.HandleError(ctx, err)
@@ -147,7 +150,8 @@ func (s *ContentService) StoreContent(ctx context.Context, r *content.StoreConte
 	}
 
 	tx.Commit()
-	if err := s.SetBaseURL(ctx); err != nil {
+	s.Context = ctx
+	if err := s.SetBaseURL(); err != nil {
 		return &content.Content{}, aphgrpc.HandleError(ctx, err)
 	}
 	grpc.SetTrailer(ctx, metadata.Pairs("method", "POST"))
@@ -192,7 +196,8 @@ func (s *ContentService) UpdateContent(ctx context.Context, r *content.UpdateCon
 		return &content.Content{}, status.Error(codes.Internal, err.Error())
 	}
 	tx.Commit()
-	if err := s.SetBaseURL(ctx); err != nil {
+	s.Context = ctx
+	if err := s.SetBaseURL(); err != nil {
 		return &content.Content{}, aphgrpc.HandleError(ctx, err)
 	}
 	attr := s.dbCoreToResourceAttributes(dbct)
@@ -281,23 +286,29 @@ func (s *ContentService) getResourceBySlug(slug string) (*content.Content, error
 
 // -- Functions that builds up the various parts of the final user resource objects
 func (s *ContentService) buildResourceData(id int64, attr *content.ContentAttributes) *content.ContentData {
-	return &content.ContentData{
+	cd := &content.ContentData{
 		Attributes: attr,
 		Id:         id,
-		Links: &jsonapi.Links{
-			Self: s.GenResourceSelfLink(id),
-		},
-		Type: s.GetResourceName(),
+		Type:       s.GetResourceName(),
 	}
+	if !aphgrpc.SkipHTTPLinks(s.Context) {
+		cd.Links = &jsonapi.Links{
+			Self: s.GenResourceSelfLink(id),
+		}
+	}
+	return cd
 }
 
 func (s *ContentService) buildResource(id int64, attr *content.ContentAttributes) *content.Content {
-	return &content.Content{
+	cd := &content.Content{
 		Data: s.buildResourceData(id, attr),
-		Links: &jsonapi.Links{
-			Self: s.GenResourceSelfLink(id),
-		},
 	}
+	if !aphgrpc.SkipHTTPLinks(s.Context) {
+		cd.Links = &jsonapi.Links{
+			Self: s.GenResourceSelfLink(id),
+		}
+	}
+	return cd
 }
 
 // Functions that generates resource objects or parts of it from database mapped objects
