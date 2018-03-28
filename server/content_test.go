@@ -155,7 +155,7 @@ func cloneDbSchemaRepo() (string, error) {
 func runGRPCServer(db *sql.DB) {
 	dbh := runner.NewDB(db, "postgres")
 	grpcS := grpc.NewServer()
-	pb.RegisterContentServiceServer(grpcS, NewContentService(dbh, "contents"))
+	pb.RegisterContentServiceServer(grpcS, NewContentService(dbh))
 	lis, err := net.Listen("tcp", port)
 	if err != nil {
 		panic(err)
