@@ -1,10 +1,10 @@
 package main
 
 import (
-	"fmt"
 	"os"
 
 	"github.com/dictyBase/modware-content/commands"
+	"github.com/dictyBase/modware-content/validate"
 
 	"gopkg.in/urfave/cli.v1"
 )
@@ -12,40 +12,9 @@ import (
 func main() {
 	app := cli.NewApp()
 	app.Name = "modware-content"
-	app.Usage = "starts the modware-content microservice with HTTP and grpc backends"
-	app.Version = "1.0.0"
+	app.Usage = "cli for modware-content microservice"
+	app.Version = "2.0.0"
 	app.Flags = []cli.Flag{
-		cli.StringFlag{
-			Name:   "dictycontent-pass",
-			EnvVar: "DICTYCONTENT_PASS",
-			Usage:  "dictycontent database password",
-		},
-		cli.StringFlag{
-			Name:   "dictycontent-db",
-			EnvVar: "DICTYCONTENT_DB",
-			Usage:  "dictycontent database name",
-		},
-		cli.StringFlag{
-			Name:   "dictycontent-user",
-			EnvVar: "DICTYCONTENT_USER",
-			Usage:  "dictycontent database user",
-		},
-		cli.StringFlag{
-			Name:   "dictycontent-host",
-			Value:  "dictycontent-backend",
-			EnvVar: "DICTYCONTENT_BACKEND_SERVICE_HOST",
-			Usage:  "dictycontent database host",
-		},
-		cli.StringFlag{
-			Name:   "dictycontent-port",
-			EnvVar: "DICTYCONTENT_BACKEND_SERVICE_PORT",
-			Usage:  "dictycontent database port",
-		},
-		cli.StringFlag{
-			Name:  "port",
-			Usage: "tcp port at which the servers will be available",
-			Value: "9555",
-		},
 		cli.StringFlag{
 			Name:  "log-format",
 			Usage: "format of the logging out, either of json or text.",
@@ -57,19 +26,51 @@ func main() {
 			Value: "error",
 		},
 	}
-	app.Before = validateArgs
-	app.Action = commands.RunServer
-	app.Run(os.Args)
-}
-
-func validateArgs(c *cli.Context) error {
-	for _, p := range []string{"dictycontent-pass", "dictycontent-db", "dictycontent-user"} {
-		if len(c.String(p)) == 0 {
-			return cli.NewExitError(
-				fmt.Sprintf("argument %s is missing", p),
-				2,
-			)
-		}
+	app.Commands = []cli.Command{
+		{
+			Name:   "start-server",
+			Usage:  "starts the modware-content microservice with HTTP and grpc backends",
+			Action: commands.RunServer,
+			Before: validate.ValidateServerArgs,
+			Flags: []cli.Flag{
+				cli.StringFlag{
+					Name:   "dictycontent-pass",
+					EnvVar: "DICTYCONTENT_PASS",
+					Usage:  "dictycontent database password",
+				},
+				cli.StringFlag{
+					Name:   "dictycontent-db",
+					EnvVar: "DICTYCONTENT_DB",
+					Usage:  "dictycontent database name",
+				},
+				cli.StringFlag{
+					Name:   "dictycontent-user",
+					EnvVar: "DICTYCONTENT_USER",
+					Usage:  "dictycontent database user",
+				},
+				cli.StringFlag{
+					Name:   "dictycontent-host",
+					Value:  "dictycontent-backend",
+					EnvVar: "DICTYCONTENT_BACKEND_SERVICE_HOST",
+					Usage:  "dictycontent database host",
+				},
+				cli.StringFlag{
+					Name:   "dictycontent-port",
+					EnvVar: "DICTYCONTENT_BACKEND_SERVICE_PORT",
+					Usage:  "dictycontent database port",
+				},
+				cli.StringFlag{
+					Name:   "content-api-http-host",
+					EnvVar: "CONTENT_API_HTTP_HOST",
+					Usage:  "public hostname serving the http api, by default the default port will be appended to http://localhost",
+				},
+				cli.StringFlag{
+					Name:  "port",
+					Usage: "tcp port at which the servers will be available",
+					Value: "9555",
+				},
+			},
+		},
 	}
-	return nil
+	app.Run(os.Args)
 }
