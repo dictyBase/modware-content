@@ -42,7 +42,12 @@ func RunServer(c *cli.Context) error {
 			grpc_logrus.UnaryServerInterceptor(getLogger(c)),
 		),
 	)
-	pb.RegisterContentServiceServer(grpcS, server.NewContentService(dbh, "contents"))
+	pb.RegisterContentServiceServer(
+		grpcS,
+		server.NewContentService(
+			dbh,
+			aphgrpc.BaseURLOption(setApiHost(c)),
+		))
 	reflection.Register(grpcS)
 
 	// http requests muxer
@@ -110,6 +115,13 @@ func RunServer(c *cli.Context) error {
 		return cli.NewExitError("error in running cmux server", 2)
 	}
 	return nil
+}
+
+func setApiHost(c *cli.Context) string {
+	if len(c.String("content-api-http-host")) > 0 {
+		return c.String("content-api-http-host")
+	}
+	return fmt.Sprintf("http://localhost:%s", c.String("port"))
 }
 
 func getPgxDbHandler(c *cli.Context) (*sql.DB, error) {
