@@ -68,14 +68,21 @@ type ContentService struct {
 	*aphgrpc.Service
 }
 
-func NewContentService(dbh *runner.DB, pathPrefix string) *ContentService {
-	return &ContentService{
-		&aphgrpc.Service{
-			Resource:   "contents",
-			Dbh:        dbh,
-			PathPrefix: pathPrefix,
-		},
+func defaultOptions() *aphgrpc.ServiceOptions {
+	return &aphgrpc.ServiceOptions{
+		PathPrefix: "contents",
+		Resource:   "contents",
 	}
+}
+
+func NewContentService(dbh *runner.DB, options ...aphgrpc.Option) *ContentService {
+	so := defaultOptions()
+	for _, optfn := range options {
+		optfn(so)
+	}
+	srv := &aphgrpc.Service{Dbh: dbh}
+	aphgrpc.AssignFieldsToStructs(so, srv)
+	return &ContentService{srv}
 }
 
 func (s *ContentService) Healthz(ctx context.Context, r *jsonapi.HealthzIdRequest) (*empty.Empty, error) {
