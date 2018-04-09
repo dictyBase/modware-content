@@ -20,16 +20,24 @@
     "aphcollection",
     "aphgrpc"
   ]
-  revision = "02a33aaad74d2a7f6fbc44a95f5e7818bb9b6f00"
+  revision = "a3b4e4c9449052f33dadcf759ecd45f41c907f13"
 
 [[projects]]
   branch = "master"
   name = "github.com/dictyBase/go-genproto"
   packages = [
     "dictybaseapis/api/jsonapi",
-    "dictybaseapis/content"
+    "dictybaseapis/content",
+    "dictybaseapis/pubsub",
+    "dictybaseapis/user"
   ]
-  revision = "206275a5c0e3b222e8dffa593554d19f17cebe26"
+  revision = "082a006471f4bb2c2d3be2c4a8e478be75d7f55e"
+
+[[projects]]
+  branch = "develop"
+  name = "github.com/dictyBase/modware-identity"
+  packages = ["message"]
+  revision = "99ac1fec3e82d9aafa9b95c68ed237d789d5b81b"
 
 [[projects]]
   name = "github.com/docker/distribution"
@@ -232,6 +240,23 @@
   name = "github.com/mwitkow/go-proto-validators"
   packages = ["."]
   revision = "a55ca57f374a8846924b030f534d8b8211508cf0"
+
+[[projects]]
+  name = "github.com/nats-io/go-nats"
+  packages = [
+    ".",
+    "encoders/builtin",
+    "encoders/protobuf",
+    "util"
+  ]
+  revision = "062418ea1c2181f52dc0f954f6204370519a868b"
+  version = "v1.5.0"
+
+[[projects]]
+  name = "github.com/nats-io/nuid"
+  packages = ["."]
+  revision = "289cccf02c178dc782430d534e3c1f5b72af807f"
+  version = "v1.0.0"
 
 [[projects]]
   name = "github.com/pelletier/go-buffruneio"
@@ -495,6 +520,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "f2362da725169a3de014e81139dd7a6ab792c3877db58289f5a1254fb2fc3ae7"
+  inputs-digest = "e87096ed05b988887454871fb5856385876d88f6f57e0b4fa25435792b47c3db"
   solver-name = "gps-cdcl"
   solver-version = 1

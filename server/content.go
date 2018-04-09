@@ -6,6 +6,7 @@ import (
 	"regexp"
 	"strings"
 
+	"github.com/dictyBase/modware-content/message"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/metadata"
@@ -66,23 +67,30 @@ type dbContentCore struct {
 
 type ContentService struct {
 	*aphgrpc.Service
+	request message.Request
 }
 
 func defaultOptions() *aphgrpc.ServiceOptions {
 	return &aphgrpc.ServiceOptions{
 		PathPrefix: "contents",
 		Resource:   "contents",
+		Topics: map[string]string{
+			"userExists": "UserService.Exist",
+		},
 	}
 }
 
-func NewContentService(dbh *runner.DB, options ...aphgrpc.Option) *ContentService {
+func NewContentService(dbh *runner.DB, req message.Request, options ...aphgrpc.Option) *ContentService {
 	so := defaultOptions()
 	for _, optfn := range options {
 		optfn(so)
 	}
 	srv := &aphgrpc.Service{Dbh: dbh}
 	aphgrpc.AssignFieldsToStructs(so, srv)
-	return &ContentService{srv}
+	return &ContentService{
+		Service: srv,
+		request: req,
+	}
 }
 
 func (s *ContentService) Healthz(ctx context.Context, r *jsonapi.HealthzIdRequest) (*empty.Empty, error) {
@@ -123,12 +131,10 @@ func (s *ContentService) StoreContent(ctx context.Context, r *content.StoreConte
 				Columns("name").Values(r.Data.Attributes.Namespace).
 				Returning("namespace_id").QueryScalar(&namespaceId)
 			if err != nil {
-				grpc.SetTrailer(ctx, aphgrpc.ErrDatabaseInsert)
-				return &content.Content{}, status.Error(codes.Internal, err.Error())
+				return &content.Content{}, aphgrpc.HandleInsertError(ctx, err)
 			}
 		} else {
-			grpc.SetTrailer(ctx, aphgrpc.ErrDatabaseUpdate)
-			return &content.Content{}, status.Error(codes.Internal, err.Error())
+			return &content.Content{}, aphgrpc.HandleUpdateError(ctx, err)
 		}
 	}
 
@@ -143,8 +149,7 @@ func (s *ContentService) StoreContent(ctx context.Context, r *content.StoreConte
 		Returning(prKeyCol, "created_at").
 		QueryScalar(&ctId, &at)
 	if err != nil {
-		grpc.SetTrailer(ctx, aphgrpc.ErrDatabaseInsert)
-		return &content.Content{}, status.Error(codes.Internal, err.Error())
+		return &content.Content{}, aphgrpc.HandleInsertError(ctx, err)
 	}
 
 	tx.Commit()
@@ -153,7 +158,7 @@ func (s *ContentService) StoreContent(ctx context.Context, r *content.StoreConte
 	attr.CreatedAt = aphgrpc.NullToTime(at)
 	attr.UpdatedAt = attr.CreatedAt
 	attr.Namespace = r.Data.Attributes.Namespace
-	return s.buildResource(ctId, attr), nil
+	return s.buildResource(context.TODO(), ctId, attr), nil
 }
 
 func (s *ContentService) UpdateContent(ctx context.Context, r *content.UpdateContentRequest) (*content.Content, error) {
@@ -192,7 +197,7 @@ func (s *ContentService) UpdateContent(ctx context.Context, r *content.UpdateCon
 	tx.Commit()
 	attr := s.dbCoreToResourceAttributes(dbct)
 	attr.Namespace = namespace
-	return s.buildResource(dbct.ContentId, attr), nil
+	return s.buildResource(context.TODO(), dbct.ContentId, attr), nil
 }
 
 func (s *ContentService) DeleteContent(ctx context.Context, r *content.ContentIdRequest) (*empty.Empty, error) {
@@ -251,7 +256,7 @@ func (s *ContentService) getResource(id int64) (*content.Content, error) {
 	if err != nil {
 		return &content.Content{}, err
 	}
-	return s.buildResource(id, s.dbToResourceAttributes(dct)), nil
+	return s.buildResource(context.TODO(), id, s.dbToResourceAttributes(dct)), nil
 }
 
 func (s *ContentService) getResourceBySlug(slug string) (*content.Content, error) {
@@ -271,26 +276,26 @@ func (s *ContentService) getResourceBySlug(slug string) (*content.Content, error
 	if err != nil {
 		return &content.Content{}, err
 	}
-	return s.buildResource(dct.ContentId, s.dbToResourceAttributes(dct)), nil
+	return s.buildResource(context.TODO(), dct.ContentId, s.dbToResourceAttributes(dct)), nil
 }
 
-// -- Functions that builds up the various parts of the final user resource objects
-func (s *ContentService) buildResourceData(id int64, attr *content.ContentAttributes) *content.ContentData {
+// -- Functions that builds up the various parts of the final content resource objects
+func (s *ContentService) buildResourceData(ctx context.Context, id int64, attr *content.ContentAttributes) *content.ContentData {
 	return &content.ContentData{
 		Attributes: attr,
 		Id:         id,
 		Type:       s.GetResourceName(),
 		Links: &jsonapi.Links{
-			Self: s.GenResourceSelfLink(id),
+			Self: s.GenResourceSelfLink(ctx, id),
 		},
 	}
 }
 
-func (s *ContentService) buildResource(id int64, attr *content.ContentAttributes) *content.Content {
+func (s *ContentService) buildResource(ctx context.Context, id int64, attr *content.ContentAttributes) *content.Content {
 	return &content.Content{
-		Data: s.buildResourceData(id, attr),
+		Data: s.buildResourceData(ctx, id, attr),
 		Links: &jsonapi.Links{
-			Self: s.GenResourceSelfLink(id),
+			Self: s.GenResourceSelfLink(ctx, id),
 		},
 	}
 }
