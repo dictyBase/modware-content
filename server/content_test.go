@@ -16,6 +16,7 @@ import (
 	"time"
 
 	pb "github.com/dictyBase/go-genproto/dictybaseapis/content"
+	"github.com/dictyBase/go-genproto/dictybaseapis/pubsub"
 	"google.golang.org/grpc"
 
 	runner "gopkg.in/mgutz/dat.v2/sqlx-runner"
@@ -34,6 +35,18 @@ var schemaRepo string = "https://github.com/dictybase-docker/dictycontent-schema
 const (
 	port = ":9596"
 )
+
+type fakeRequest struct {
+	name string
+}
+
+func (f *fakeRequest) UserRequest(s string, r *pubsub.IdRequest, t time.Duration) (*pubsub.UserReply, error) {
+	return &pubsub.UserReply{Exist: true}, nil
+}
+
+func (f *fakeRequest) UserRequestWithContext(ctx context.Context, s string, r *pubsub.IdRequest) (*pubsub.UserReply, error) {
+	return &pubsub.UserReply{Exist: true}, nil
+}
 
 type ContentJSON struct {
 	Paragraph string `json:"paragraph"`
@@ -155,7 +168,7 @@ func cloneDbSchemaRepo() (string, error) {
 func runGRPCServer(db *sql.DB) {
 	dbh := runner.NewDB(db, "postgres")
 	grpcS := grpc.NewServer()
-	pb.RegisterContentServiceServer(grpcS, NewContentService(dbh))
+	pb.RegisterContentServiceServer(grpcS, NewContentService(dbh, &fakeRequest{}))
 	lis, err := net.Listen("tcp", port)
 	if err != nil {
 		panic(err)
