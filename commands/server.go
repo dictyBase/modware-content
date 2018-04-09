@@ -11,6 +11,7 @@ import (
 
 	"github.com/dictyBase/apihelpers/aphgrpc"
 	pb "github.com/dictyBase/go-genproto/dictybaseapis/content"
+	"github.com/dictyBase/modware-content/message/nats"
 	"github.com/dictyBase/modware-content/server"
 	"github.com/go-chi/cors"
 	"github.com/grpc-ecosystem/go-grpc-middleware"
@@ -36,6 +37,16 @@ func RunServer(c *cli.Context) error {
 			2,
 		)
 	}
+	ms, err := nats.NewRequest(
+		c.String("nats-host"),
+		c.String("nats-port"),
+	)
+	if err != nil {
+		return cli.NewExitError(
+			fmt.Sprintf("cannot connect to messaging server %s", err.Error()),
+			2,
+		)
+	}
 	grpcS := grpc.NewServer(
 		grpc_middleware.WithUnaryServerChain(
 			grpc_ctxtags.UnaryServerInterceptor(),
@@ -46,6 +57,7 @@ func RunServer(c *cli.Context) error {
 		grpcS,
 		server.NewContentService(
 			dbh,
+			ms,
 			aphgrpc.BaseURLOption(setApiHost(c)),
 		))
 	reflection.Register(grpcS)

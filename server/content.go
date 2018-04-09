@@ -17,6 +17,7 @@ import (
 	"github.com/dictyBase/apihelpers/aphgrpc"
 	"github.com/dictyBase/go-genproto/dictybaseapis/api/jsonapi"
 	"github.com/dictyBase/go-genproto/dictybaseapis/content"
+	"github.com/dictyBase/go-genproto/dictybaseapis/pubsub"
 	"github.com/golang/protobuf/ptypes/empty"
 )
 
@@ -115,15 +116,35 @@ func (s *ContentService) GetContent(ctx context.Context, r *content.ContentIdReq
 }
 
 func (s *ContentService) StoreContent(ctx context.Context, r *content.StoreContentRequest) (*content.Content, error) {
+	emptyCt := new(content.Content)
 	if err := r.Data.Attributes.Validate(); err != nil {
 		grpc.SetTrailer(ctx, aphgrpc.ErrDatabaseInsert)
-		return &content.Content{}, status.Error(codes.InvalidArgument, err.Error())
+		return emptyCt, status.Error(codes.InvalidArgument, err.Error())
+	}
+	// Check for presence of user
+	// by messaging through user service
+	reply, err := s.request.UserRequestWithContext(
+		context.Background(),
+		s.Topics["userExists"],
+		&pubsub.IdRequest{Id: r.Data.Attributes.CreatedBy},
+	)
+	if err != nil {
+		return emptyCt, aphgrpc.HandleGenericError(ctx, err)
+	}
+	if reply.Status != nil {
+		return emptyCt, aphgrpc.HandleMessagingError(ctx, reply.Status)
+	}
+	if !reply.Exist {
+		return emptyCt, aphgrpc.HandleNotFoundError(
+			ctx,
+			fmt.Errorf("user id %d not found", r.Data.Attributes.CreatedBy),
+		)
 	}
 	tx, _ := s.Dbh.Begin()
 	defer tx.AutoRollback()
 	// Check if namespace exists
 	var namespaceId int64
-	err := tx.Select("namespace_id").From(namespaceDbTable).
+	err = tx.Select("namespace_id").From(namespaceDbTable).
 		Where("name = $1", r.Data.Attributes.Namespace).QueryScalar(&namespaceId)
 	if err != nil {
 		if strings.Contains(err.Error(), "no rows") {
@@ -131,10 +152,10 @@ func (s *ContentService) StoreContent(ctx context.Context, r *content.StoreConte
 				Columns("name").Values(r.Data.Attributes.Namespace).
 				Returning("namespace_id").QueryScalar(&namespaceId)
 			if err != nil {
-				return &content.Content{}, aphgrpc.HandleInsertError(ctx, err)
+				return emptyCt, aphgrpc.HandleInsertError(ctx, err)
 			}
 		} else {
-			return &content.Content{}, aphgrpc.HandleUpdateError(ctx, err)
+			return emptyCt, aphgrpc.HandleUpdateError(ctx, err)
 		}
 	}
 

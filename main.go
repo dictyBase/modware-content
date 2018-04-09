@@ -65,6 +65,16 @@ func main() {
 					Usage:  "public hostname serving the http api, by default the default port will be appended to http://localhost",
 				},
 				cli.StringFlag{
+					Name:   "nats-host",
+					EnvVar: "NATS_SERVICE_HOST",
+					Usage:  "nats messaging server host",
+				},
+				cli.StringFlag{
+					Name:   "nats-port",
+					EnvVar: "NATS_SERVICE_PORT",
+					Usage:  "nats messaging server port",
+				},
+				cli.StringFlag{
 					Name:  "port",
 					Usage: "tcp port at which the servers will be available",
 					Value: "9555",
