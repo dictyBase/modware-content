@@ -33,7 +33,8 @@ var db *sql.DB
 var schemaRepo string = "https://github.com/dictybase-docker/dictycontent-schema"
 
 const (
-	port = ":9596"
+	port   = ":9596"
+	schema = "content"
 )
 
 type fakeRequest struct {
@@ -189,6 +190,15 @@ func TestMain(m *testing.M) {
 		log.Fatalf("Could not start resource: %s", err)
 	}
 	db, err = pg.RetryDbConnection()
+	if err != nil {
+		log.Fatal(err)
+	}
+	// create schema for this application
+	_, err = db.Exec(fmt.Sprintf("CREATE SCHEMA %s", schema))
+	if err != nil {
+		log.Fatal(err)
+	}
+	_, err = db.Exec(fmt.Sprintf("SET search_path TO %s", schema))
 	if err != nil {
 		log.Fatal(err)
 	}
