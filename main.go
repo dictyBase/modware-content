@@ -34,17 +34,17 @@ func main() {
 			Before: validate.ValidateServerArgs,
 			Flags: []cli.Flag{
 				cli.StringFlag{
-					Name:   "dictycontent-pass",
+					Name:   "dictycontent-pass, pass",
 					EnvVar: "DICTYCONTENT_PASS",
 					Usage:  "dictycontent database password",
 				},
 				cli.StringFlag{
-					Name:   "dictycontent-db",
+					Name:   "dictycontent-db, db",
 					EnvVar: "DICTYCONTENT_DB",
 					Usage:  "dictycontent database name",
 				},
 				cli.StringFlag{
-					Name:   "dictycontent-user",
+					Name:   "dictycontent-user, u, user",
 					EnvVar: "DICTYCONTENT_USER",
 					Usage:  "dictycontent database user",
 				},
