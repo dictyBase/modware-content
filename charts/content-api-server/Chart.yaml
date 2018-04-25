@@ -4,7 +4,7 @@ description: A Helm chart for Kubernetes to run dictycontent api server.
 maintainers:
 - email: siddhartha-basu@northwestern.edu
   name: Siddhartha Basu
-name: dictycontent-api-server
+name: content-api-server
 sources:
 - https://hub.docker.com/r/dictybase/modware-content
 - https://github.com/dictyBase/modware-content
