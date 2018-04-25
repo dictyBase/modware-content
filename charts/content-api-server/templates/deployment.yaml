@@ -23,14 +23,14 @@ spec:
           imagePullPolicy: {{ .Values.image.pullPolicy }}
           args: [
             "--log-level",
-            "{{ .Values.logLevel }}"
+            "{{ .Values.logLevel }}",
             "start-server",
             "--dictycontent-db",
             $(DBNAME),
             "--dictycontent-user",
             $(USER),
             "--dictycontent-pass", 
-            $(PASS)
+            $(PASS),
             "--content-api-http-host",
             "{{ .Values.apiHost }}",
             "--port",
