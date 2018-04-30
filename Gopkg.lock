@@ -28,10 +28,11 @@
   packages = [
     "dictybaseapis/api/jsonapi",
     "dictybaseapis/content",
+    "dictybaseapis/identity",
     "dictybaseapis/pubsub",
     "dictybaseapis/user"
   ]
-  revision = "082a006471f4bb2c2d3be2c4a8e478be75d7f55e"
+  revision = "fb30be4646f8bddd11e2b55e2c0b72eadcabe2d5"
 
 [[projects]]
   branch = "develop"
