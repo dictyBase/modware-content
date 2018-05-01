@@ -32,7 +32,7 @@
     "dictybaseapis/pubsub",
     "dictybaseapis/user"
   ]
-  revision = "fb30be4646f8bddd11e2b55e2c0b72eadcabe2d5"
+  revision = "c875deaa60d6f160a462d41b0f9e233e436c1dbe"
 
 [[projects]]
   branch = "develop"
