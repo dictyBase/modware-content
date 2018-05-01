@@ -57,9 +57,11 @@ spec:
             containerPort: {{ .Values.service.port }}
           livenessProbe:
             httpGet:
-              path: "{{ .Values.healthCheck.path }}"
+              path: {{ .Values.healthCheck.path }}
               port: {{ .Values.service.port }}
-            initialDelaySeconds: {{ .Values.healthCheck.delay }}
+            initialDelaySeconds: {{ .Values.healthCheck.initial }}
+            timeoutSeconds: 1
+            periodSeconds: {{ .Values.healthCheck.period }}
       {{- if .Values.resources }}
           resources:
 {{ toYaml .Values.resources | indent 12 }}
