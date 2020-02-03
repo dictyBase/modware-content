@@ -55,7 +55,7 @@ require (
 	github.com/satori/go.uuid v1.2.0 // indirect
 	github.com/sergi/go-diff v1.0.0 // indirect
 	github.com/shopspring/decimal v0.0.0-20200105231215-408a2507e114 // indirect
-	github.com/sirupsen/logrus v1.0.4
+	github.com/sirupsen/logrus v1.4.2
 	github.com/soheilhy/cmux v0.1.4
 	github.com/src-d/gcfg v1.3.0 // indirect
 	github.com/stevvooe/resumable v0.0.0-20180830230917-22b14a53ba50 // indirect
