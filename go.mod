@@ -64,7 +64,7 @@ require (
 	golang.org/x/crypto v0.0.0-20180127211104-1875d0a70c90 // indirect
 	golang.org/x/sync v0.0.0-20190911185100-cd5d95a43a6e // indirect
 	google.golang.org/genproto v0.0.0-20180125080656-4eb30f4778ee // indirect
-	google.golang.org/grpc v1.9.2
+	google.golang.org/grpc v1.27.0
 	gopkg.in/airbrake/gobrake.v2 v2.0.9 // indirect
 	gopkg.in/check.v1 v1.0.0-20190902080502-41f04d3bba15 // indirect
 	gopkg.in/gemnasium/logrus-airbrake-hook.v2 v2.1.2 // indirect
