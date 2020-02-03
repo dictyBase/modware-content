@@ -21,11 +21,11 @@ import (
 	_ "github.com/jackc/pgx/stdlib"
 	"github.com/sirupsen/logrus"
 	"github.com/soheilhy/cmux"
+	"github.com/urfave/cli"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
 	dat "gopkg.in/mgutz/dat.v2/dat"
 	runner "gopkg.in/mgutz/dat.v2/sqlx-runner"
-	"gopkg.in/urfave/cli.v1"
 )
 
 func RunServer(c *cli.Context) error {
