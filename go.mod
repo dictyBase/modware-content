@@ -21,7 +21,7 @@ require (
 	github.com/go-sql-driver/mysql v1.5.0 // indirect
 	github.com/gogo/protobuf v0.0.0-20171007142547-342cbe0a0415 // indirect
 	github.com/golang/glog v0.0.0-20160126235308-23def4e6c14b // indirect
-	github.com/golang/protobuf v1.2.0
+	github.com/golang/protobuf v1.3.3
 	github.com/google/go-cmp v0.4.0 // indirect
 	github.com/grpc-ecosystem/go-grpc-middleware v0.0.0-20180108155640-d0c54e68681e
 	github.com/grpc-ecosystem/grpc-gateway v1.3.1
