@@ -24,7 +24,7 @@ require (
 	github.com/golang/protobuf v1.2.0
 	github.com/google/go-cmp v0.4.0 // indirect
 	github.com/grpc-ecosystem/go-grpc-middleware v0.0.0-20180108155640-d0c54e68681e
-	github.com/grpc-ecosystem/grpc-gateway v1.3.1
+	github.com/grpc-ecosystem/grpc-gateway v1.12.2
 	github.com/hashicorp/go-version v1.2.0 // indirect
 	github.com/jackc/fake v0.0.0-20150926172116-812a484cc733 // indirect
 	github.com/jackc/pgx v3.1.0+incompatible
