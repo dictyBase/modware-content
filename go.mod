@@ -71,7 +71,7 @@ require (
 	gopkg.in/mgutz/dat.v2 v2.0.0-20171004160617-d76e4f81c4ef
 	gopkg.in/src-d/go-billy.v4 v4.0.2 // indirect
 	gopkg.in/src-d/go-git-fixtures.v3 v3.5.0 // indirect
-	gopkg.in/src-d/go-git.v4 v4.1.0
+	gopkg.in/src-d/go-git.v4 v4.13.1
 	gopkg.in/urfave/cli.v1 v1.20.0
 	gopkg.in/warnings.v0 v0.1.2 // indirect
 )
