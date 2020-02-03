@@ -6,7 +6,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"io"
 	"io/ioutil"
 	"log"
 	"math/rand"
@@ -22,15 +21,16 @@ import (
 	runner "gopkg.in/mgutz/dat.v2/sqlx-runner"
 	"gopkg.in/src-d/go-git.v4"
 
-	"github.com/docker/docker/api/types"
-	"github.com/docker/docker/api/types/container"
-	"github.com/docker/docker/client"
 	_ "github.com/jackc/pgx/stdlib"
 	"github.com/pressly/goose"
 )
 
 var db *sql.DB
 var schemaRepo string = "https://github.com/dictybase-docker/dictycontent-schema"
+var pgAddr = fmt.Sprintf("%s:%s", os.Getenv("POSTGRES_HOST"), os.Getenv("POSTGRES_PORT"))
+var pgConn = fmt.Sprintf(
+	"postgres://%s:%s@%s/%s?sslmode=disable",
+	os.Getenv("POSTGRES_USER"), os.Getenv("POSTGRES_PASSWORD"), pgAddr, os.Getenv("POSTGRES_DB"))
 
 const (
 	port   = ":9596"
@@ -54,107 +54,50 @@ type ContentJSON struct {
 	Text      string `json:"text"`
 }
 
-type PgDocker struct {
-	Client   *client.Client
-	Image    string
-	Pass     string
-	User     string
-	Database string
-	Debug    bool
-	ContJSON types.ContainerJSON
+func CheckPostgresEnv() error {
+	envs := []string{
+		"POSTGRES_USER",
+		"POSTGRES_PASSWORD",
+		"POSTGRES_DB",
+		"POSTGRES_HOST",
+	}
+	for _, e := range envs {
+		if len(os.Getenv(e)) == 0 {
+			return fmt.Errorf("env %s is not set", e)
+		}
+	}
+	return nil
 }
 
-func NewPgDocker() (*PgDocker, error) {
-	pg := &PgDocker{}
-	if len(os.Getenv("DOCKER_HOST")) == 0 {
-		return pg, errors.New("DOCKER_HOST is not set")
+type TestPostgres struct {
+	DB *sql.DB
+}
+
+func NewTestPostgresFromEnv() (*TestPostgres, error) {
+	pg := new(TestPostgres)
+	if err := CheckPostgresEnv(); err != nil {
+		return pg, err
 	}
-	if len(os.Getenv("DOCKER_API_VERSION")) == 0 {
-		return pg, errors.New("DOCKER_API is not set")
-	}
-	cl, err := client.NewEnvClient()
+	dbh, err := sql.Open("pgx", pgConn)
 	if err != nil {
 		return pg, err
 	}
-	pg.Client = cl
-	pg.Image = "postgres:9.6.6-alpine"
-	pg.Pass = "pgdocker"
-	pg.User = "pguser"
-	pg.Database = "pgtest"
-	return pg, nil
-}
-
-func (d *PgDocker) Run() (container.ContainerCreateCreatedBody, error) {
-	cli := d.Client
-	out, err := cli.ImagePull(context.Background(), d.Image, types.ImagePullOptions{})
-	if err != nil {
-		return container.ContainerCreateCreatedBody{}, err
-	}
-	if d.Debug {
-		io.Copy(os.Stdout, out)
-	}
-	resp, err := cli.ContainerCreate(context.Background(), &container.Config{
-		Image: d.Image,
-		Env: []string{
-			"POSTGRES_PASSWORD=" + d.Pass,
-			"POSTGRES_USER=" + d.User,
-			"POSTGRES_DB=" + d.Database,
-		},
-	}, nil, nil, "")
-	if err != nil {
-		return container.ContainerCreateCreatedBody{}, err
-	}
-	if err := cli.ContainerStart(context.Background(), resp.ID, types.ContainerStartOptions{}); err != nil {
-		return container.ContainerCreateCreatedBody{}, err
-	}
-	cjson, err := cli.ContainerInspect(context.Background(), resp.ID)
-	if err != nil {
-		return container.ContainerCreateCreatedBody{}, err
-	}
-	d.ContJSON = cjson
-	return resp, nil
-}
-
-func (d *PgDocker) RetryDbConnection() (*sql.DB, error) {
-	connStr := fmt.Sprintf(
-		"postgres://%s:%s@%s:%s/%s?sslmode=disable",
-		d.User, d.Pass, d.GetIP(), d.GetPort(), d.Database,
-	)
-	dbh, err := sql.Open("pgx", connStr)
-	if err != nil {
-		return dbh, err
-	}
 	timeout, err := time.ParseDuration("28s")
+	if err != nil {
+		return pg, err
+	}
 	t1 := time.Now()
 	for {
 		if err := dbh.Ping(); err != nil {
-			if time.Now().Sub(t1).Seconds() > timeout.Seconds() {
-				return dbh, errors.New("timed out, no connection retrieved")
+			if time.Since(t1).Seconds() > timeout.Seconds() {
+				return pg, errors.New("timed out, no connection retrieved")
 			}
 			continue
 		}
 		break
 	}
-	return dbh, nil
-}
-
-func (d *PgDocker) GetIP() string {
-	return d.ContJSON.NetworkSettings.IPAddress
-}
-
-func (d *PgDocker) GetPort() string {
-	return "5432"
-}
-
-func (d *PgDocker) Purge(resp container.ContainerCreateCreatedBody) error {
-	cli := d.Client
-	if err := cli.ContainerStop(context.Background(), resp.ID, nil); err != nil {
-		return err
-	}
-	if err := cli.ContainerRemove(context.Background(), resp.ID, types.ContainerRemoveOptions{}); err != nil {
-		return err
-	}
-	return nil
+	pg.DB = dbh
+	return pg, nil
 }
 
 func cloneDbSchemaRepo() (string, error) {
@@ -172,27 +115,20 @@ func runGRPCServer(db *sql.DB) {
 	pb.RegisterContentServiceServer(grpcS, NewContentService(dbh, &fakeRequest{}))
 	lis, err := net.Listen("tcp", port)
 	if err != nil {
-		panic(err)
+		log.Fatalf("error listening to grpc port %s", err)
 	}
 	log.Printf("starting grpc server at port %s", port)
 	if err := grpcS.Serve(lis); err != nil {
-		panic(err)
+		log.Fatalf("error serving %s", err)
 	}
 }
 
 func TestMain(m *testing.M) {
-	pg, err := NewPgDocker()
+	pg, err := NewTestPostgresFromEnv()
 	if err != nil {
-		log.Fatalf("Could not connect to docker: %s", err)
+		log.Fatalf("unable to construct new NewTestPostgresFromEnv instance %s", err)
 	}
-	resource, err := pg.Run()
-	if err != nil {
-		log.Fatalf("Could not start resource: %s", err)
-	}
-	db, err = pg.RetryDbConnection()
-	if err != nil {
-		log.Fatal(err)
-	}
+	db = pg.DB
 	// create schema for this application
 	_, err = db.Exec(fmt.Sprintf("CREATE SCHEMA %s", schema))
 	if err != nil {
@@ -211,11 +147,7 @@ func TestMain(m *testing.M) {
 		log.Fatalf("issue with running database migration %s\n", err)
 	}
 	go runGRPCServer(db)
-	code := m.Run()
-	if err = pg.Purge(resource); err != nil {
-		log.Fatalf("unable to remove container %s\n", err)
-	}
-	os.Exit(code)
+	os.Exit(m.Run())
 }
 
 func NewStoreContent(name string) *pb.StoreContentRequest {
@@ -238,7 +170,9 @@ func NewStoreContent(name string) *pb.StoreContentRequest {
 }
 
 func TestCreate(t *testing.T) {
-	conn, err := grpc.Dial("localhost"+port, grpc.WithInsecure())
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	conn, err := grpc.DialContext(ctx, "localhost"+port, grpc.WithInsecure(), grpc.WithBlock())
 	if err != nil {
 		t.Fatalf("could not connect to grpc server %s\n", err)
 	}
@@ -275,7 +209,7 @@ func TestGetBySlug(t *testing.T) {
 		t.Fatalf("could not retrieve content by %d Id", nct.Data.Id)
 	}
 	if nct.Data.Id != ct.Data.Id {
-		t.Errorf("expected id %d did not match %d", ct.Data.Id)
+		t.Errorf("expected id %d did not match %d", ct.Data.Id, nct.Data.Id)
 	}
 	if ct.Data.Attributes.Slug != "stockcenter-payment-information" {
 		t.Fatalf("expected slug did not match %s", ct.Data.Attributes.Slug)
@@ -298,7 +232,7 @@ func TestGet(t *testing.T) {
 		t.Fatalf("could not retrieve content by %d Id", nct.Data.Id)
 	}
 	if nct.Data.Id != ct.Data.Id {
-		t.Errorf("expected id %d did not match %d", ct.Data.Id)
+		t.Errorf("expected id %d did not match %d", ct.Data.Id, nct.Data.Id)
 	}
 	if ct.Data.Attributes.Slug != "stockcenter-order-information" {
 		t.Fatalf("expected slug did not match %s", ct.Data.Attributes.Slug)
