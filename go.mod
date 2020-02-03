@@ -27,7 +27,7 @@ require (
 	github.com/grpc-ecosystem/grpc-gateway v1.3.1
 	github.com/hashicorp/go-version v1.2.0 // indirect
 	github.com/jackc/fake v0.0.0-20150926172116-812a484cc733 // indirect
-	github.com/jackc/pgx v3.1.0+incompatible
+	github.com/jackc/pgx v3.6.2+incompatible
 	github.com/jbenet/go-context v0.0.0-20150711004518-d14ea06fba99 // indirect
 	github.com/jmoiron/sqlx v0.0.0-20180124204410-05cef0741ade // indirect
 	github.com/kevinburke/ssh_config v0.0.0-20180127194858-0ff8514904a8 // indirect
