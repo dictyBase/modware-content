@@ -66,3 +66,8 @@ It's [here](https://dictybase.github.io/dictybase-api), make sure you use the co
 
 The protocol buffer definitions and service apis are documented
 [here](https://github.com/dictyBase/dictybaseapis/tree/master/dictybase/content).
+
+## Active Developers
+
+<a href="https://sourcerer.io/cybersiddhu"><img src="https://sourcerer.io/assets/avatar/cybersiddhu" height="80px" alt="Sourcerer"></a>
+<a href="https://sourcerer.io/wildlifehexagon"><img src="https://sourcerer.io/assets/avatar/wildlifehexagon" height="80px" alt="Sourcerer"></a>
