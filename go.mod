@@ -13,7 +13,6 @@ require (
 	github.com/gofrs/uuid v3.2.0+incompatible // indirect
 	github.com/gogo/protobuf v0.0.0-20171007142547-342cbe0a0415 // indirect
 	github.com/golang/protobuf v1.3.3
-	github.com/google/go-cmp v0.4.0 // indirect
 	github.com/grpc-ecosystem/go-grpc-middleware v0.0.0-20180108155640-d0c54e68681e
 	github.com/grpc-ecosystem/grpc-gateway v1.12.2
 	github.com/jackc/fake v0.0.0-20150926172116-812a484cc733 // indirect
@@ -43,7 +42,7 @@ require (
 	github.com/stretchr/testify v1.4.0 // indirect
 	github.com/urfave/cli v1.22.4
 	golang.org/x/sys v0.0.0-20191120155948-bd437916bb0e // indirect
-	google.golang.org/grpc v1.27.1
+	google.golang.org/grpc v1.30.0
 	gopkg.in/check.v1 v1.0.0-20190902080502-41f04d3bba15 // indirect
 	gopkg.in/mgutz/dat.v2 v2.0.0-20171004160617-d76e4f81c4ef
 	gopkg.in/src-d/go-git.v4 v4.13.1
