@@ -39,10 +39,9 @@ require (
 	github.com/shopspring/decimal v0.0.0-20200105231215-408a2507e114 // indirect
 	github.com/sirupsen/logrus v1.6.0
 	github.com/soheilhy/cmux v0.1.4
-	github.com/stretchr/testify v1.4.0 // indirect
 	github.com/urfave/cli v1.22.4
-	golang.org/x/sys v0.0.0-20191120155948-bd437916bb0e // indirect
 	google.golang.org/grpc v1.32.0
+	google.golang.org/grpc/examples v0.0.0-20200924182952-21f897eab8af // indirect
 	gopkg.in/check.v1 v1.0.0-20190902080502-41f04d3bba15 // indirect
 	gopkg.in/mgutz/dat.v2 v2.0.0-20171004160617-d76e4f81c4ef
 	gopkg.in/src-d/go-git.v4 v4.13.1
