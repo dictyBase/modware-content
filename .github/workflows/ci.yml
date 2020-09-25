@@ -71,6 +71,7 @@ jobs:
         uses: docker/build-push-action@v2
         with:
           push: true
+          file: build/package/Dockerfile
           tags: dictybase/modware-content:develop-${{ steps.type.outputs.id }}
           cache-from: type=local,src=/tmp/.buildx-cache
           cache-to: type=local,dest=/tmp/.buildx-cache
