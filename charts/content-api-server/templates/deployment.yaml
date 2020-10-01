@@ -1,18 +1,21 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: {{ template "dictycontent-api-server.fullname" . }}
+  name: {{ template "content-api.fullname" . }}
   labels:
-    app: {{ template "dictycontent-api-server.fullname" . }}
-    chart: {{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}
+    app: {{ template "content-api.fullname" . }}
+    chart: {{ template "content-api.chart" . }}
     release: {{ .Release.Name }}
     heritage: {{ .Release.Service }}
 spec:
   replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      app: {{ template "content-api.fullname" . }}
   template:
     metadata:
       labels:
-        app: {{ template "dictycontent-api-server.fullname" . }}
+        app: {{ template "content-api.fullname" . }}
         group: {{ .Values.group | quote }}
         provider: {{ .Values.provider | quote }}
         mode: {{ .Values.mode | quote }}
