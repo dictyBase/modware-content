@@ -3,7 +3,17 @@ updates:
 - package-ecosystem: gomod
   directory: "/"
   schedule:
-    interval: daily
+    interval: weekly
+    day: saturday
     time: "11:00"
     timezone: America/Chicago
   open-pull-requests-limit: 99
+  target-branch: develop
+- package-ecosystem: github-actions
+  target-branch: develop
+  directory: "/"
+  schedule:
+    interval: weekly
+    day: saturday
+    time: "11:00"
+    timezone: America/Chicago
