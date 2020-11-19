@@ -1,0 +1,28 @@
+{
+  "files": [
+    "README.md"
+  ],
+  "imageSize": 100,
+  "commit": false,
+  "contributors": [
+    {
+      "login": "cybersiddhu",
+      "name": "Siddhartha Basu",
+      "avatar_url": "https://avatars3.githubusercontent.com/u/48740?v=4",
+      "profile": "http://cybersiddhu.github.com/",
+      "contributions": [
+        "bug",
+        "code",
+        "content",
+        "doc",
+        "maintenance"
+      ]
+    }
+  ],
+  "contributorsPerLine": 7,
+  "projectName": "modware-content",
+  "projectOwner": "dictyBase",
+  "repoType": "github",
+  "repoHost": "https://github.com",
+  "skipCi": true
+}
