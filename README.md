@@ -1,27 +1,11 @@
 # modware-user
 
 [![License](https://img.shields.io/badge/License-BSD%202--Clause-blue.svg)](LICENSE)  
-![GitHub action](https://github.com/dictyBase/modware-content/workflows/Continuous%integration/badge.svg)
-[![codecov](https://codecov.io/gh/dictyBase/modware-content/branch/develop/graph/badge.svg)](https://codecov.io/gh/dictyBase/modware-content)  
-[![Technical debt](https://badgen.net/codeclimate/tech-debt/dictyBase/modware-content)](https://codeclimate.com/github/dictyBase/modware-content/trends/technical_debt)
-[![Issues](https://badgen.net/codeclimate/issues/dictyBase/modware-content)](https://codeclimate.com/github/dictyBase/modware-content/issues)
+![Continuous integration](https://github.com/dictyBase/modware-content/workflows/Continuous%20integration/badge.svg)
+[![codecov](https://codecov.io/gh/dictyBase/modware-content/branch/develop/graph/badge.svg)](https://codecov.io/gh/dictyBase/modware-content)
 [![Maintainability](https://api.codeclimate.com/v1/badges/21ed283a6186cfa3d003/maintainability)](https://codeclimate.com/github/dictyBase/modware-content/maintainability)  
-![Issues](https://badgen.net/github/issues/dictyBase/modware-content)
-![Open Issues](https://badgen.net/github/open-issues/dictyBase/modware-content)
-![Closed Issues](https://badgen.net/github/closed-issues/dictyBase/modware-content)  
-![Total PRS](https://badgen.net/github/prs/dictyBase/modware-content)
-![Open PRS](https://badgen.net/github/open-prs/dictyBase/modware-content)
-![Closed PRS](https://badgen.net/github/closed-prs/dictyBase/modware-content)
-![Merged PRS](https://badgen.net/github/merged-prs/dictyBase/modware-content)  
-![Commits](https://badgen.net/github/commits/dictyBase/modware-content/develop)
-![Last commit](https://badgen.net/github/last-commit/dictyBase/modware-content/develop)
-![Branches](https://badgen.net/github/branches/dictyBase/modware-content)
-![Tags](https://badgen.net/github/tags/dictyBase/modware-content/?color=cyan)  
-![GitHub repo size](https://img.shields.io/github/repo-size/dictyBase/modware-content?style=plastic)
-![GitHub code size in bytes](https://img.shields.io/github/languages/code-size/dictyBase/modware-content?style=plastic)
-[![Lines of Code](https://badgen.net/codeclimate/loc/dictyBase/modware-content)](https://codeclimate.com/github/dictyBase/modware-content/code)  
-[![Funding](https://badgen.net/badge/NIGMS/Rex%20L%20Chisholm,dictyBase/yellow?list=|)](https://projectreporter.nih.gov/project_info_description.cfm?aid=9476993)
-[![Funding](https://badgen.net/badge/NIGMS/Rex%20L%20Chisholm,DSC/yellow?list=|)](https://projectreporter.nih.gov/project_info_description.cfm?aid=9438930)
+![Last commit](https://badgen.net/github/last-commit/dictyBase/modware-content/develop)   
+[![Funding](https://badgen.net/badge/Funding/Rex%20L%20Chisholm,dictyBase,DCR/yellow?list=|)](https://projectreporter.nih.gov/project_info_description.cfm?aid=10024726&icde=0)
 
 [dictyBase](http://dictybase.org) **API** server that uses [dictycontent
 backend](https://github.com/dictybase-docker/dictycontent-postgres) to manage
@@ -66,7 +50,17 @@ It's [here](https://dictybase.github.io/dictybase-api), make sure you use the co
 The protocol buffer definitions and service apis are documented
 [here](https://github.com/dictyBase/dictybaseapis/tree/master/dictybase/content).
 
-## Active Developers
-
-<a href="https://sourcerer.io/cybersiddhu"><img src="https://sourcerer.io/assets/avatar/cybersiddhu" height="80px" alt="Sourcerer"></a>
-<a href="https://sourcerer.io/wildlifehexagon"><img src="https://sourcerer.io/assets/avatar/wildlifehexagon" height="80px" alt="Sourcerer"></a>
+# Misc badges
+![Issues](https://badgen.net/github/issues/dictyBase/modware-content)
+![Open Issues](https://badgen.net/github/open-issues/dictyBase/modware-content)
+![Closed Issues](https://badgen.net/github/closed-issues/dictyBase/modware-content)  
+![Total PRS](https://badgen.net/github/prs/dictyBase/modware-content)
+![Open PRS](https://badgen.net/github/open-prs/dictyBase/modware-content)
+![Closed PRS](https://badgen.net/github/closed-prs/dictyBase/modware-content)
+![Merged PRS](https://badgen.net/github/merged-prs/dictyBase/modware-content)  
+![Commits](https://badgen.net/github/commits/dictyBase/modware-content/develop)
+![Branches](https://badgen.net/github/branches/dictyBase/modware-content)
+![Tags](https://badgen.net/github/tags/dictyBase/modware-content/?color=cyan)  
+![GitHub repo size](https://img.shields.io/github/repo-size/dictyBase/modware-content?style=plastic)
+![GitHub code size in bytes](https://img.shields.io/github/languages/code-size/dictyBase/modware-content?style=plastic)
+[![Lines of Code](https://badgen.net/codeclimate/loc/dictyBase/modware-content)](https://codeclimate.com/github/dictyBase/modware-content/code)  
