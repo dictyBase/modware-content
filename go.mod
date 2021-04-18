@@ -38,7 +38,7 @@ require (
 	github.com/pressly/goose v2.7.0+incompatible
 	github.com/satori/go.uuid v1.2.0 // indirect
 	github.com/shopspring/decimal v0.0.0-20200105231215-408a2507e114 // indirect
-	github.com/sirupsen/logrus v1.7.0
+	github.com/sirupsen/logrus v1.8.1
 	github.com/soheilhy/cmux v0.1.5
 	github.com/urfave/cli v1.22.5
 	google.golang.org/genproto v0.0.0-20200806141610-86f49bd18e98 // indirect
