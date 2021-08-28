@@ -31,7 +31,7 @@ jobs:
           NATS_PORT: ${{ job.services.nats.ports[4222] }}
           GOPROXY: https://proxy.golang.org
       - name: upload coverage to codecov
-        uses: codecov/codecov-action@v1.4.0
+        uses: codecov/codecov-action@v2.0.3
         with:
           file: ./profile.cov
           token: ${{ secrets.CODECOV_TOKEN }}
