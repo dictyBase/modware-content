@@ -1,39 +1,93 @@
+run:
+  timeout: 5m
+  allow-parallel-runners: true
+linters-settings:
+   funlen: 
+    lines: 80
+    statements: 50
+   lll:
+      line-length: 130
+   revive:
+      rules:
+        - name: var-naming
+          arguments: [["ID"]]
+   gosec:
+      excludes:
+        - G404
+   wrapcheck:
+      ignoreSigs:
+        - .HandleGetError(
+        - .HandleGenericError(
+        - .HandleInsertError(
+        - .HandleNotFoundError(
+        - .HandleInvalidError(
+        - .HandleInvalidParamError(
+        - .HandleUpdateError(
+        - .Errorf(
+        - errors.New(
 linters:
   # inverted configuration with `enable-all` and `disable` is not scalable during updates of golangci-lint
   disable-all: true
   enable:
+    - asciicheck
     - bodyclose
-    - deadcode
+    - bidichk
+    - cyclop 
+    - decorder
     - depguard
+    - dogsled
     - dupl
     - errcheck
+    - errname
     - funlen
+    - gci
     - gochecknoinits
     - goconst
     - gocritic
     - gocyclo
+    - godot
     - gofmt
     - goimports
     - gosec
     - gosimple
     - govet
+    - gocognit
+    - gomnd 
+    - gomoddirectives
+    - gomodguard
+    - grouper
     - ineffassign
-    - interfacer
+    - importas
     - lll
+    - maintidx
     - misspell
     - nakedret
-    - scopelint
+    - nestif
+    - nilerr
+    - nlreturn
+    - nolintlint
+    - prealloc
+    # - paralleltest
+    - predeclared
+    - revive
+    - rowserrcheck
     - staticcheck
-    - structcheck
-    - stylecheck
     - typecheck
     - unconvert
+    - thelper
+    - tparallel
     - unparam
     - unused
-    - varcheck
+    - unconvert
+    - unparam
+    - varnamelen
+    - wastedassign
     - whitespace
+    - wrapcheck
+
   # don't enable:
   # - godox
   # - maligned,prealloc
   # - gochecknoglobals
   # - golint
+  #  - forcetypeassert
