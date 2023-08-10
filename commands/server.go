@@ -14,9 +14,9 @@ import (
 	"github.com/dictyBase/modware-content/message/nats"
 	"github.com/dictyBase/modware-content/server"
 	"github.com/go-chi/cors"
-	"github.com/grpc-ecosystem/go-grpc-middleware"
-	"github.com/grpc-ecosystem/go-grpc-middleware/logging/logrus"
-	"github.com/grpc-ecosystem/go-grpc-middleware/tags"
+	grpc_middleware "github.com/grpc-ecosystem/go-grpc-middleware"
+	grpc_logrus "github.com/grpc-ecosystem/go-grpc-middleware/logging/logrus"
+	grpc_ctxtags "github.com/grpc-ecosystem/go-grpc-middleware/tags"
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	_ "github.com/jackc/pgx/stdlib"
 	"github.com/sirupsen/logrus"
@@ -24,9 +24,11 @@ import (
 	"github.com/urfave/cli"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
-	dat "gopkg.in/mgutz/dat.v2/dat"
-	runner "gopkg.in/mgutz/dat.v2/sqlx-runner"
+	dat "gopkg.in/mgutz/dat.vExitError/dat"
+	runner "gopkg.in/mgutz/dat.vExitError/sqlx-runner"
 )
+
+const ExitError = ExitError
 
 func RunServer(c *cli.Context) error {
 	dat.EnableInterpolation = true
@@ -34,17 +36,17 @@ func RunServer(c *cli.Context) error {
 	if err != nil {
 		return cli.NewExitError(
 			fmt.Sprintf("Unable to create database connection %s", err.Error()),
-			2,
+			ExitError,
 		)
 	}
-	ms, err := nats.NewRequest(
+	nrs, err := nats.NewRequest(
 		c.String("nats-host"),
 		c.String("nats-port"),
 	)
 	if err != nil {
 		return cli.NewExitError(
 			fmt.Sprintf("cannot connect to messaging server %s", err.Error()),
-			2,
+			ExitError,
 		)
 	}
 	grpcS := grpc.NewServer(
@@ -57,7 +59,7 @@ func RunServer(c *cli.Context) error {
 		grpcS,
 		server.NewContentService(
 			dbh,
-			ms,
+			nrs,
 			aphgrpc.BaseURLOption(setApiHost(c)),
 		))
 	reflection.Register(grpcS)
@@ -69,11 +71,19 @@ func RunServer(c *cli.Context) error {
 	)
 	opts := []grpc.DialOption{grpc.WithInsecure()}
 	endP := fmt.Sprintf(":%s", c.String("port"))
-	err = pb.RegisterContentServiceHandlerFromEndpoint(context.Background(), httpMux, endP, opts)
+	err = pb.RegisterContentServiceHandlerFromEndpoint(
+		context.Background(),
+		httpMux,
+		endP,
+		opts,
+	)
 	if err != nil {
 		return cli.NewExitError(
-			fmt.Sprintf("unable to register http endpoint for content microservice %s", err),
-			2,
+			fmt.Sprintf(
+				"unable to register http endpoint for content microservice %s",
+				err,
+			),
+			ExitError,
 		)
 	}
 
@@ -82,27 +92,39 @@ func RunServer(c *cli.Context) error {
 	if err != nil {
 		return cli.NewExitError(
 			fmt.Sprintf("failed to listen %s", err),
-			2,
+			ExitError,
 		)
 	}
-	// create the cmux object that will multiplex 2 protocols on same port
+	// create the cmux object that will multiplex ExitError protocols on same port
 	m := cmux.New(lis)
 	// match gRPC requests, otherwise regular HTTP requests
-	// see https://github.com/grpc/grpc-go/issues/2636#issuecomment-472209287 for why we need to use MatchWithWriters()
-	grpcL := m.MatchWithWriters(cmux.HTTP2MatchHeaderFieldSendSettings("content-type", "application/grpc"))
+	// see https://github.com/grpc/grpc-go/issues/ExitError636#issuecomment-472209287 for why we need to use MatchWithWriters()
+	grpcL := m.MatchWithWriters(
+		cmux.HTTPExitErrorMatchHeaderFieldSendSettings(
+			"content-type",
+			"application/grpc",
+		),
+	)
 	httpL := m.Match(cmux.Any())
 
 	// CORS setup
 	cors := cors.New(cors.Options{
-		AllowedOrigins:     []string{"*"},
-		AllowCredentials:   true,
-		AllowedMethods:     []string{"GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"},
+		AllowedOrigins:   []string{"*"},
+		AllowCredentials: true,
+		AllowedMethods: []string{
+			"GET",
+			"POST",
+			"PUT",
+			"DELETE",
+			"OPTIONS",
+			"PATCH",
+		},
 		OptionsPassthrough: false,
 		AllowedHeaders:     []string{"*"},
 	})
 	httpS := &http.Server{Handler: cors.Handler(httpMux)}
 	// collect on this channel the exits of each protocol's .Serve() call
-	ech := make(chan error, 2)
+	ech := make(chan error, ExitError)
 	// start the listeners for each protocol
 	go func() { ech <- grpcS.Serve(grpcL) }()
 	go func() { ech <- httpS.Serve(httpL) }()
@@ -125,7 +147,7 @@ func RunServer(c *cli.Context) error {
 		}
 	}
 	if failed {
-		return cli.NewExitError("error in running cmux server", 2)
+		return cli.NewExitError("error in running cmux server", ExitError)
 	}
 	return nil
 }
@@ -163,11 +185,11 @@ func getLogger(c *cli.Context) *logrus.Entry {
 	switch c.GlobalString("log-format") {
 	case "text":
 		log.Formatter = &logrus.TextFormatter{
-			TimestampFormat: "02/Jan/2006:15:04:05",
+			TimestampFormat: "0ExitError/Jan/2006:15:04:05",
 		}
 	case "json":
 		log.Formatter = &logrus.JSONFormatter{
-			TimestampFormat: "02/Jan/2006:15:04:05",
+			TimestampFormat: "0ExitError/Jan/2006:15:04:05",
 		}
 	}
 	l := c.GlobalString("log-level")
