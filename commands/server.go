@@ -30,6 +30,110 @@ import (
 
 const ExitError = 2
 
+func startServers(
+	grpcS *grpc.Server,
+	httpMux *runtime.ServeMux,
+	cmlis cmux.CMux,
+	lis net.Listener,
+	grpcL net.Listener,
+	httpL net.Listener,
+) error {
+	cors := cors.New(cors.Options{
+		AllowedOrigins:   []string{"*"},
+		AllowCredentials: true,
+		AllowedMethods: []string{
+			"GET",
+			"POST",
+			"PUT",
+			"DELETE",
+			"OPTIONS",
+			"PATCH",
+		},
+		OptionsPassthrough: false,
+		AllowedHeaders:     []string{"*"},
+	})
+	httpS := &http.Server{Handler: cors.Handler(httpMux)}
+	ech := make(chan error, ExitError)
+	go func() { ech <- grpcS.Serve(grpcL) }()
+	go func() { ech <- httpS.Serve(httpL) }()
+	log.Printf("starting multiplexed server on %s", lis.Addr())
+	var failed bool
+	if err := cmlis.Serve(); err != nil {
+		log.Printf("cmux server error: %v", err)
+		failed = true
+	}
+	icount := 0
+	for err := range ech {
+		if err != nil {
+			log.Printf("protocol serve error:%v", err)
+			failed = true
+		}
+		icount++
+		if cap(ech) == icount {
+			close(ech)
+			break
+		}
+	}
+	if failed {
+		return fmt.Errorf("error in running cmux server")
+	}
+
+	return nil
+}
+
+func createListener(c *cli.Context) (net.Listener, error) {
+	endP := fmt.Sprintf(":%s", c.String("port"))
+	lis, err := net.Listen("tcp", endP)
+	return lis, err
+}
+
+func createCMux(lis net.Listener) (cmux.CMux, net.Listener, net.Listener) {
+	cmlis := cmux.New(lis)
+	grpcL := cmlis.MatchWithWriters(
+		cmux.HTTP2MatchHeaderFieldSendSettings(
+			"content-type",
+			"application/grpc",
+		),
+	)
+	httpL := cmlis.Match(cmux.Any())
+	return cmlis, grpcL, httpL
+}
+
+func registerHTTPHandler(c *cli.Context, httpMux *runtime.ServeMux) error {
+	opts := []grpc.DialOption{grpc.WithInsecure()}
+	endP := fmt.Sprintf(":%s", c.String("port"))
+	err := pb.RegisterContentServiceHandlerFromEndpoint(
+		context.Background(),
+		httpMux,
+		endP,
+		opts,
+	)
+
+	if err != nil {
+		return fmt.Errorf("error in registering http handler %s", err)
+	}
+
+	return nil
+}
+
+func createHTTPServeMux(c *cli.Context) *runtime.ServeMux {
+	runtime.HTTPError = aphgrpc.CustomHTTPError
+	httpMux := runtime.NewServeMux(
+		runtime.WithForwardResponseOption(aphgrpc.HandleCreateResponse),
+	)
+
+	return httpMux
+}
+
+func createGRPCServer(c *cli.Context) *grpc.Server {
+	return grpc.NewServer(
+		grpc_middleware.WithUnaryServerChain(
+			grpc_ctxtags.UnaryServerInterceptor(),
+			grpc_logrus.UnaryServerInterceptor(getLogger(c)),
+		),
+	)
+}
+
 func RunServer(c *cli.Context) error {
 	dat.EnableInterpolation = true
 	dbh, err := getPgWrapper(c)
@@ -49,12 +153,7 @@ func RunServer(c *cli.Context) error {
 			ExitError,
 		)
 	}
-	grpcS := grpc.NewServer(
-		grpc_middleware.WithUnaryServerChain(
-			grpc_ctxtags.UnaryServerInterceptor(),
-			grpc_logrus.UnaryServerInterceptor(getLogger(c)),
-		),
-	)
+	grpcS := createGRPCServer(c)
 	pb.RegisterContentServiceServer(
 		grpcS,
 		server.NewContentService(
@@ -63,21 +162,8 @@ func RunServer(c *cli.Context) error {
 			aphgrpc.BaseURLOption(setAPIHost(c)),
 		))
 	reflection.Register(grpcS)
-
-	// http requests muxer
-	runtime.HTTPError = aphgrpc.CustomHTTPError
-	httpMux := runtime.NewServeMux(
-		runtime.WithForwardResponseOption(aphgrpc.HandleCreateResponse),
-	)
-	opts := []grpc.DialOption{grpc.WithInsecure()}
-	endP := fmt.Sprintf(":%s", c.String("port"))
-	err = pb.RegisterContentServiceHandlerFromEndpoint(
-		context.Background(),
-		httpMux,
-		endP,
-		opts,
-	)
-	if err != nil {
+	httpMux := createHTTPServeMux(c)
+	if err := registerHTTPHandler(c, httpMux); err != nil {
 		return cli.NewExitError(
 			fmt.Sprintf(
 				"unable to register http endpoint for content microservice %s",
@@ -87,68 +173,20 @@ func RunServer(c *cli.Context) error {
 		)
 	}
 
-	// create listener
-	lis, err := net.Listen("tcp", endP)
+	lis, err := createListener(c)
 	if err != nil {
 		return cli.NewExitError(
 			fmt.Sprintf("failed to listen %s", err),
 			ExitError,
 		)
 	}
-	// create the cmux object that will multiplex ExitError protocols on same port
-	cmlis := cmux.New(lis)
-	// match gRPC requests, otherwise regular HTTP requests
-	// see https://github.com/grpc/grpc-go/issues/ExitError636#issuecomment-472209287 for why we need to use MatchWithWriters()
-	grpcL := cmlis.MatchWithWriters(
-		cmux.HTTP2MatchHeaderFieldSendSettings(
-			"content-type",
-			"application/grpc",
-		),
-	)
-	httpL := cmlis.Match(cmux.Any())
-
-	// CORS setup
-	cors := cors.New(cors.Options{
-		AllowedOrigins:   []string{"*"},
-		AllowCredentials: true,
-		AllowedMethods: []string{
-			"GET",
-			"POST",
-			"PUT",
-			"DELETE",
-			"OPTIONS",
-			"PATCH",
-		},
-		OptionsPassthrough: false,
-		AllowedHeaders:     []string{"*"},
-	})
-	httpS := &http.Server{Handler: cors.Handler(httpMux)}
-	// collect on this channel the exits of each protocol's .Serve() call
-	ech := make(chan error, ExitError)
-	// start the listeners for each protocol
-	go func() { ech <- grpcS.Serve(grpcL) }()
-	go func() { ech <- httpS.Serve(httpL) }()
-	log.Printf("starting multiplexed  server on %s", endP)
-	var failed bool
-	if err := cmlis.Serve(); err != nil {
-		log.Printf("cmux server error: %v", err)
-		failed = true
-	}
-	icount := 0
-	for err := range ech {
-		if err != nil {
-			log.Printf("protocol serve error:%v", err)
-			failed = true
-		}
-		icount++
-		if cap(ech) == icount {
-			close(ech)
-
-			break
-		}
-	}
-	if failed {
-		return cli.NewExitError("error in running cmux server", ExitError)
+	cmlis, grpcL, httpL := createCMux(lis)
+	err = startServers(grpcS, httpMux, cmlis, lis, grpcL, httpL)
+	if err != nil {
+		return cli.NewExitError(
+			fmt.Sprintf("error in starting servers %s", err),
+			ExitError,
+		)
 	}
 
 	return nil
@@ -215,5 +253,6 @@ func getLogger(cltx *cli.Context) *logrus.Entry {
 	case "panic":
 		log.Level = logrus.PanicLevel
 	}
+
 	return logrus.NewEntry(log)
 }
