@@ -24,11 +24,11 @@ import (
 	"github.com/urfave/cli"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
-	dat "gopkg.in/mgutz/dat.vExitError/dat"
-	runner "gopkg.in/mgutz/dat.vExitError/sqlx-runner"
+	dat "gopkg.in/mgutz/dat.v2/dat"
+	runner "gopkg.in/mgutz/dat.v2/sqlx-runner"
 )
 
-const ExitError = ExitError
+const ExitError = 2
 
 func RunServer(c *cli.Context) error {
 	dat.EnableInterpolation = true
@@ -60,7 +60,7 @@ func RunServer(c *cli.Context) error {
 		server.NewContentService(
 			dbh,
 			nrs,
-			aphgrpc.BaseURLOption(setApiHost(c)),
+			aphgrpc.BaseURLOption(setAPIHost(c)),
 		))
 	reflection.Register(grpcS)
 
@@ -96,16 +96,16 @@ func RunServer(c *cli.Context) error {
 		)
 	}
 	// create the cmux object that will multiplex ExitError protocols on same port
-	m := cmux.New(lis)
+	cmlis := cmux.New(lis)
 	// match gRPC requests, otherwise regular HTTP requests
 	// see https://github.com/grpc/grpc-go/issues/ExitError636#issuecomment-472209287 for why we need to use MatchWithWriters()
-	grpcL := m.MatchWithWriters(
-		cmux.HTTPExitErrorMatchHeaderFieldSendSettings(
+	grpcL := cmlis.MatchWithWriters(
+		cmux.HTTP2MatchHeaderFieldSendSettings(
 			"content-type",
 			"application/grpc",
 		),
 	)
-	httpL := m.Match(cmux.Any())
+	httpL := cmlis.Match(cmux.Any())
 
 	// CORS setup
 	cors := cors.New(cors.Options{
@@ -130,42 +130,45 @@ func RunServer(c *cli.Context) error {
 	go func() { ech <- httpS.Serve(httpL) }()
 	log.Printf("starting multiplexed  server on %s", endP)
 	var failed bool
-	if err := m.Serve(); err != nil {
+	if err := cmlis.Serve(); err != nil {
 		log.Printf("cmux server error: %v", err)
 		failed = true
 	}
-	i := 0
+	icount := 0
 	for err := range ech {
 		if err != nil {
 			log.Printf("protocol serve error:%v", err)
 			failed = true
 		}
-		i++
-		if cap(ech) == i {
+		icount++
+		if cap(ech) == icount {
 			close(ech)
+
 			break
 		}
 	}
 	if failed {
 		return cli.NewExitError("error in running cmux server", ExitError)
 	}
+
 	return nil
 }
 
-func setApiHost(c *cli.Context) string {
+func setAPIHost(c *cli.Context) string {
 	if len(c.String("content-api-http-host")) > 0 {
 		return c.String("content-api-http-host")
 	}
+
 	return fmt.Sprintf("http://localhost:%s", c.String("port"))
 }
 
-func getPgxDbHandler(c *cli.Context) (*sql.DB, error) {
+func getPgxDbHandler(cltx *cli.Context) (*sql.DB, error) {
 	cStr := fmt.Sprintf("postgres://%s:%s@%s:%s/%s?sslmode=disable",
-		c.String("dictycontent-user"),
-		c.String("dictycontent-pass"),
-		c.String("dictycontent-host"),
-		c.String("dictycontent-port"),
-		c.String("dictycontent-db"),
+		cltx.String("dictycontent-user"),
+		cltx.String("dictycontent-pass"),
+		cltx.String("dictycontent-host"),
+		cltx.String("dictycontent-port"),
+		cltx.String("dictycontent-db"),
 	)
 	return sql.Open("pgx", cStr)
 }
