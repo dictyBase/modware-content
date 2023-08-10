@@ -2,7 +2,7 @@ name: Test coverage
 on: [pull_request]
 jobs:
   test:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
     services:
       postgres:
         image: postgres:9.6.6-alpine
@@ -14,11 +14,11 @@ jobs:
           - 5432/tcp
     steps:
       - name: set up golang
-        uses: actions/setup-go@v1
+        uses: actions/setup-go@v4
         with:
-          go-version: 1.13.15
+          go-version: '~1.20.6'
       - name: check out code
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
       - name: unit test
         run: go test -covermode=atomic -coverprofile=profile.cov -v ./...
         env:
@@ -31,7 +31,6 @@ jobs:
           NATS_PORT: ${{ job.services.nats.ports[4222] }}
           GOPROXY: https://proxy.golang.org
       - name: upload coverage to codecov
-        uses: codecov/codecov-action@v1.4.0
+        uses: codecov/codecov-action@v3
         with:
           file: ./profile.cov
-          token: ${{ secrets.CODECOV_TOKEN }}
