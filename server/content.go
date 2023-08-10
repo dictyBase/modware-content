@@ -114,6 +114,7 @@ func (s *ContentService) GetContentBySlug(
 	if err != nil {
 		return &content.Content{}, aphgrpc.HandleError(ctx, err)
 	}
+
 	return ct, nil
 }
 
@@ -125,17 +126,18 @@ func (s *ContentService) GetContent(
 	if err != nil {
 		return &content.Content{}, aphgrpc.HandleError(ctx, err)
 	}
-	return ct, nil
 
+	return ct, nil
 }
 
 func (s *ContentService) StoreContent(
 	ctx context.Context,
-	r *content.StoreContentRequest,
+	req *content.StoreContentRequest,
 ) (*content.Content, error) {
 	emptyCt := new(content.Content)
-	if err := r.Data.Attributes.Validate(); err != nil {
+	if err := req.Data.Attributes.Validate(); err != nil {
 		grpc.SetTrailer(ctx, aphgrpc.ErrDatabaseInsert)
+
 		return emptyCt, status.Error(codes.InvalidArgument, err.Error())
 	}
 	// Check for presence of user
@@ -143,7 +145,7 @@ func (s *ContentService) StoreContent(
 	reply, err := s.request.UserRequestWithContext(
 		context.Background(),
 		s.Topics["userExists"],
-		&pubsub.IdRequest{Id: r.Data.Attributes.CreatedBy},
+		&pubsub.IdRequest{Id: req.Data.Attributes.CreatedBy},
 	)
 	if err != nil {
 		return emptyCt, aphgrpc.HandleGenericError(ctx, err)
@@ -154,20 +156,20 @@ func (s *ContentService) StoreContent(
 	if !reply.Exist {
 		return emptyCt, aphgrpc.HandleNotFoundError(
 			ctx,
-			fmt.Errorf("user id %d not found", r.Data.Attributes.CreatedBy),
+			fmt.Errorf("user id %d not found", req.Data.Attributes.CreatedBy),
 		)
 	}
-	tx, _ := s.Dbh.Begin()
-	defer tx.AutoRollback()
+	txn, _ := s.Dbh.Begin()
+	defer txn.AutoRollback()
 	// Check if namespace exists
 	var namespaceId int64
-	err = tx.Select("namespace_id").From(namespaceDbTable).
-		Where("name = $1", r.Data.Attributes.Namespace).
+	err = txn.Select("namespace_id").From(namespaceDbTable).
+		Where("name = $1", req.Data.Attributes.Namespace).
 		QueryScalar(&namespaceId)
 	if err != nil {
 		if strings.Contains(err.Error(), "no rows") {
-			err := tx.InsertInto(namespaceDbTable).
-				Columns("name").Values(r.Data.Attributes.Namespace).
+			err := txn.InsertInto(namespaceDbTable).
+				Columns("name").Values(req.Data.Attributes.Namespace).
 				Returning("namespace_id").QueryScalar(&namespaceId)
 			if err != nil {
 				return emptyCt, aphgrpc.HandleInsertError(ctx, err)
@@ -178,33 +180,34 @@ func (s *ContentService) StoreContent(
 	}
 
 	var ctId int64
-	var at dat.NullTime
-	dbct := s.createAttrTodbContentCore(r.Data.Attributes)
+	var atn dat.NullTime
+	dbct := s.createAttrTodbContentCore(req.Data.Attributes)
 	dbct.NamespaceId = namespaceId
 	ctcolumns := aphgrpc.GetDefinedTags(dbct, "db")
-	err = tx.InsertInto(contentDbTable).
+	err = txn.InsertInto(contentDbTable).
 		Columns(ctcolumns...).
 		Record(dbct).
 		Returning(prKeyCol, "created_at").
-		QueryScalar(&ctId, &at)
+		QueryScalar(&ctId, &atn)
 	if err != nil {
 		return &content.Content{}, aphgrpc.HandleInsertError(ctx, err)
 	}
 
-	tx.Commit()
+	txn.Commit()
 	grpc.SetTrailer(ctx, metadata.Pairs("method", "POST"))
 	attr := s.dbCoreToResourceAttributes(dbct)
-	attr.CreatedAt = aphgrpc.NullToTime(at)
+	attr.CreatedAt = aphgrpc.NullToTime(atn)
 	attr.UpdatedAt = attr.CreatedAt
-	attr.Namespace = r.Data.Attributes.Namespace
+	attr.Namespace = req.Data.Attributes.Namespace
+
 	return s.buildResource(context.TODO(), ctId, attr), nil
 }
 
 func (s *ContentService) UpdateContent(
 	ctx context.Context,
-	r *content.UpdateContentRequest,
+	req *content.UpdateContentRequest,
 ) (*content.Content, error) {
-	result, err := s.existsResource(r.Id)
+	result, err := s.existsResource(req.Id)
 	if err != nil {
 		return &content.Content{}, aphgrpc.HandleError(ctx, err)
 	}
@@ -212,10 +215,10 @@ func (s *ContentService) UpdateContent(
 		grpc.SetTrailer(ctx, aphgrpc.ErrNotFound)
 		return &content.Content{}, status.Error(
 			codes.NotFound,
-			fmt.Sprintf("id %d not found", r.Id),
+			fmt.Sprintf("id %d not found", req.Id),
 		)
 	}
-	if err := r.Data.Attributes.Validate(); err != nil {
+	if err := req.Data.Attributes.Validate(); err != nil {
 		grpc.SetTrailer(ctx, aphgrpc.ErrDatabaseUpdate)
 		return &content.Content{}, status.Error(
 			codes.InvalidArgument,
@@ -223,12 +226,12 @@ func (s *ContentService) UpdateContent(
 		)
 	}
 	dbct := &dbContentCore{}
-	tx, _ := s.Dbh.Begin()
-	defer tx.AutoRollback()
-	err = tx.Update(contentDbTable).
-		Set("updated_by", r.Data.Attributes.UpdatedBy).
-		Set("content", r.Data.Attributes.Content).
-		Where(prKeyCol+"= $1", r.Id).
+	txn, _ := s.Dbh.Begin()
+	defer txn.AutoRollback()
+	err = txn.Update(contentDbTable).
+		Set("updated_by", req.Data.Attributes.UpdatedBy).
+		Set("content", req.Data.Attributes.Content).
+		Where(prKeyCol+"= $1", req.Id).
 		Returning(contentCols...).
 		QueryStruct(dbct)
 	if err != nil {
@@ -236,13 +239,13 @@ func (s *ContentService) UpdateContent(
 		return &content.Content{}, status.Error(codes.Internal, err.Error())
 	}
 	var namespace string
-	err = tx.Select("name").From(namespaceDbTable).
+	err = txn.Select("name").From(namespaceDbTable).
 		Where("namespace_id = $1", dbct.NamespaceId).QueryScalar(&namespace)
 	if err != nil {
 		grpc.SetTrailer(ctx, aphgrpc.ErrDatabaseUpdate)
 		return &content.Content{}, status.Error(codes.Internal, err.Error())
 	}
-	tx.Commit()
+	txn.Commit()
 	attr := s.dbCoreToResourceAttributes(dbct)
 	attr.Namespace = namespace
 	return s.buildResource(context.TODO(), dbct.ContentId, attr), nil
@@ -250,9 +253,9 @@ func (s *ContentService) UpdateContent(
 
 func (s *ContentService) DeleteContent(
 	ctx context.Context,
-	r *content.ContentIdRequest,
+	req *content.ContentIdRequest,
 ) (*empty.Empty, error) {
-	result, err := s.existsResource(r.Id)
+	result, err := s.existsResource(req.Id)
 	if err != nil {
 		return &empty.Empty{}, aphgrpc.HandleError(ctx, err)
 	}
@@ -260,40 +263,40 @@ func (s *ContentService) DeleteContent(
 		grpc.SetTrailer(ctx, aphgrpc.ErrNotFound)
 		return &empty.Empty{}, status.Error(
 			codes.NotFound,
-			fmt.Sprintf("id %d not found", r.Id),
+			fmt.Sprintf("id %d not found", req.Id),
 		)
 	}
-	tx, _ := s.Dbh.Begin()
-	defer tx.AutoRollback()
-	_, err = tx.DeleteFrom(contentDbTable).Where(prKeyCol+" = $1", r.Id).Exec()
+	txn, _ := s.Dbh.Begin()
+	defer txn.AutoRollback()
+	_, err = txn.DeleteFrom(contentDbTable).Where(prKeyCol+" = $1", req.Id).Exec()
 	if err != nil {
 		grpc.SetTrailer(ctx, aphgrpc.ErrDatabaseDelete)
 		return &empty.Empty{}, status.Error(codes.Internal, err.Error())
 	}
-	tx.Commit()
+	txn.Commit()
 	return &empty.Empty{}, nil
 }
 
-func (s *ContentService) existsResource(id int64) (bool, error) {
-	r, err := s.Dbh.Select(
+func (s *ContentService) existsResource(idx int64) (bool, error) {
+	resp, err := s.Dbh.Select(
 		fmt.Sprintf("%s.%s", contentDbTable, prKeyCol),
 	).From(
 		contentDbTable,
 	).Where(
 		fmt.Sprintf("%s.%s = $1", contentDbTable, prKeyCol),
-		id,
+		idx,
 	).Exec()
 	if err != nil {
 		return false, err
 	}
-	if r.RowsAffected != 1 {
+	if resp.RowsAffected != 1 {
 		return false, nil
 	}
 	return true, nil
 }
 
-// -- Functions that queries the storage and generates resource object
-func (s *ContentService) getResource(id int64) (*content.Content, error) {
+// -- Functions that queries the storage and generates resource object.
+func (s *ContentService) getResource(idx int64) (*content.Content, error) {
 	dct := &dbContent{}
 	err := s.Dbh.Select(
 		fmt.Sprintf("%s.*", contentDbTable),
@@ -305,14 +308,14 @@ func (s *ContentService) getResource(id int64) (*content.Content, error) {
 		),
 	).Where(
 		fmt.Sprintf("%s.%s = $1", contentDbTable, prKeyCol),
-		id,
+		idx,
 	).QueryStruct(dct)
 	if err != nil {
 		return &content.Content{}, err
 	}
 	return s.buildResource(
 		context.TODO(),
-		id,
+		idx,
 		s.dbToResourceAttributes(dct),
 	), nil
 }
@@ -343,31 +346,32 @@ func (s *ContentService) getResourceBySlug(
 	), nil
 }
 
-// -- Functions that builds up the various parts of the final content resource objects
+// -- Functions that builds up the various parts of the final content resource
+// objects.
 func (s *ContentService) buildResourceData(
 	ctx context.Context,
-	id int64,
+	idn int64,
 	attr *content.ContentAttributes,
 ) *content.ContentData {
 	return &content.ContentData{
 		Attributes: attr,
-		Id:         id,
+		Id:         idn,
 		Type:       s.GetResourceName(),
 		Links: &jsonapi.Links{
-			Self: s.GenResourceSelfLink(ctx, id),
+			Self: s.GenResourceSelfLink(ctx, idn),
 		},
 	}
 }
 
 func (s *ContentService) buildResource(
 	ctx context.Context,
-	id int64,
+	idn int64,
 	attr *content.ContentAttributes,
 ) *content.Content {
 	return &content.Content{
-		Data: s.buildResourceData(ctx, id, attr),
+		Data: s.buildResourceData(ctx, idn, attr),
 		Links: &jsonapi.Links{
-			Self: s.GenResourceSelfLink(ctx, id),
+			Self: s.GenResourceSelfLink(ctx, idn),
 		},
 	}
 }
@@ -404,7 +408,7 @@ func (s *ContentService) dbCoreToResourceAttributes(
 	}
 }
 
-// Functions that generates database mapped objects from resource objects
+// Functions that generates database mapped objects from resource objects.
 func (s *ContentService) attrTodbContent(
 	attr *content.ContentAttributes,
 ) *dbContent {
