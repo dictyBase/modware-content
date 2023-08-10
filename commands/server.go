@@ -84,7 +84,11 @@ func startServers(
 func createListener(c *cli.Context) (net.Listener, error) {
 	endP := fmt.Sprintf(":%s", c.String("port"))
 	lis, err := net.Listen("tcp", endP)
-	return lis, err
+	if err != nil {
+		return lis, fmt.Errorf("error creating Listener %s", err)
+	}
+
+	return lis, nil
 }
 
 func createCMux(lis net.Listener) (cmux.CMux, net.Listener, net.Listener) {
@@ -96,6 +100,7 @@ func createCMux(lis net.Listener) (cmux.CMux, net.Listener, net.Listener) {
 		),
 	)
 	httpL := cmlis.Match(cmux.Any())
+
 	return cmlis, grpcL, httpL
 }
 
@@ -134,9 +139,9 @@ func createGRPCServer(c *cli.Context) *grpc.Server {
 	)
 }
 
-func RunServer(c *cli.Context) error {
+func RunServer(clt *cli.Context) error {
 	dat.EnableInterpolation = true
-	dbh, err := getPgWrapper(c)
+	dbh, err := getPgWrapper(clt)
 	if err != nil {
 		return cli.NewExitError(
 			fmt.Sprintf("Unable to create database connection %s", err.Error()),
@@ -144,8 +149,8 @@ func RunServer(c *cli.Context) error {
 		)
 	}
 	nrs, err := nats.NewRequest(
-		c.String("nats-host"),
-		c.String("nats-port"),
+		clt.String("nats-host"),
+		clt.String("nats-port"),
 	)
 	if err != nil {
 		return cli.NewExitError(
@@ -153,17 +158,17 @@ func RunServer(c *cli.Context) error {
 			ExitError,
 		)
 	}
-	grpcS := createGRPCServer(c)
+	grpcS := createGRPCServer(clt)
 	pb.RegisterContentServiceServer(
 		grpcS,
 		server.NewContentService(
 			dbh,
 			nrs,
-			aphgrpc.BaseURLOption(setAPIHost(c)),
+			aphgrpc.BaseURLOption(setAPIHost(clt)),
 		))
 	reflection.Register(grpcS)
 	httpMux := createHTTPServeMux()
-	if err := registerHTTPHandler(c, httpMux); err != nil {
+	if err := registerHTTPHandler(clt, httpMux); err != nil {
 		return cli.NewExitError(
 			fmt.Sprintf(
 				"unable to register http endpoint for content microservice %s",
@@ -173,7 +178,7 @@ func RunServer(c *cli.Context) error {
 		)
 	}
 
-	lis, err := createListener(c)
+	lis, err := createListener(clt)
 	if err != nil {
 		return cli.NewExitError(
 			fmt.Sprintf("failed to listen %s", err),
