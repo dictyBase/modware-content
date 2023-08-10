@@ -408,21 +408,7 @@ func (s *ContentService) dbCoreToResourceAttributes(
 	}
 }
 
-// Functions that generates database mapped objects from resource objects.
-func (s *ContentService) attrTodbContent(
-	attr *content.ContentAttributes,
-) *dbContent {
-	return &dbContent{
-		Name:      dat.NullStringFrom(attr.Name),
-		Slug:      dat.NullStringFrom(attr.Slug),
-		CreatedBy: dat.NullInt64From(attr.CreatedBy),
-		UpdatedBy: dat.NullInt64From(attr.UpdatedBy),
-		CreatedAt: dat.NullTimeFrom(aphgrpc.ProtoTimeStamp(attr.CreatedAt)),
-		UpdatedAt: dat.NullTimeFrom(aphgrpc.ProtoTimeStamp(attr.UpdatedAt)),
-		Namespace: dat.NullStringFrom(attr.Namespace),
-		Content:   dat.JSONFromString(attr.Content),
-	}
-}
+
 
 func (s *ContentService) createAttrTodbContentCore(
 	attr *content.NewContentAttributes,
