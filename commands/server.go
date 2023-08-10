@@ -116,7 +116,7 @@ func registerHTTPHandler(c *cli.Context, httpMux *runtime.ServeMux) error {
 	return nil
 }
 
-func createHTTPServeMux(c *cli.Context) *runtime.ServeMux {
+func createHTTPServeMux() *runtime.ServeMux {
 	runtime.HTTPError = aphgrpc.CustomHTTPError
 	httpMux := runtime.NewServeMux(
 		runtime.WithForwardResponseOption(aphgrpc.HandleCreateResponse),
@@ -162,7 +162,7 @@ func RunServer(c *cli.Context) error {
 			aphgrpc.BaseURLOption(setAPIHost(c)),
 		))
 	reflection.Register(grpcS)
-	httpMux := createHTTPServeMux(c)
+	httpMux := createHTTPServeMux()
 	if err := registerHTTPHandler(c, httpMux); err != nil {
 		return cli.NewExitError(
 			fmt.Sprintf(
