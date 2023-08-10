@@ -81,24 +81,35 @@ func defaultOptions() *aphgrpc.ServiceOptions {
 	}
 }
 
-func NewContentService(dbh *runner.DB, req message.Request, options ...aphgrpc.Option) *ContentService {
+func NewContentService(
+	dbh *runner.DB,
+	req message.Request,
+	options ...aphgrpc.Option,
+) *ContentService {
 	so := defaultOptions()
 	for _, optfn := range options {
 		optfn(so)
 	}
 	srv := &aphgrpc.Service{Dbh: dbh}
 	aphgrpc.AssignFieldsToStructs(so, srv)
+
 	return &ContentService{
 		Service: srv,
 		request: req,
 	}
 }
 
-func (s *ContentService) Healthz(ctx context.Context, r *jsonapi.HealthzIdRequest) (*empty.Empty, error) {
+func (s *ContentService) Healthz(
+	ctx context.Context,
+	r *jsonapi.HealthzIdRequest,
+) (*empty.Empty, error) {
 	return &empty.Empty{}, nil
 }
 
-func (s *ContentService) GetContentBySlug(ctx context.Context, r *content.ContentRequest) (*content.Content, error) {
+func (s *ContentService) GetContentBySlug(
+	ctx context.Context,
+	r *content.ContentRequest,
+) (*content.Content, error) {
 	ct, err := s.getResourceBySlug(r.Slug)
 	if err != nil {
 		return &content.Content{}, aphgrpc.HandleError(ctx, err)
@@ -106,7 +117,10 @@ func (s *ContentService) GetContentBySlug(ctx context.Context, r *content.Conten
 	return ct, nil
 }
 
-func (s *ContentService) GetContent(ctx context.Context, r *content.ContentIdRequest) (*content.Content, error) {
+func (s *ContentService) GetContent(
+	ctx context.Context,
+	r *content.ContentIdRequest,
+) (*content.Content, error) {
 	ct, err := s.getResource(r.Id)
 	if err != nil {
 		return &content.Content{}, aphgrpc.HandleError(ctx, err)
@@ -115,7 +129,10 @@ func (s *ContentService) GetContent(ctx context.Context, r *content.ContentIdReq
 
 }
 
-func (s *ContentService) StoreContent(ctx context.Context, r *content.StoreContentRequest) (*content.Content, error) {
+func (s *ContentService) StoreContent(
+	ctx context.Context,
+	r *content.StoreContentRequest,
+) (*content.Content, error) {
 	emptyCt := new(content.Content)
 	if err := r.Data.Attributes.Validate(); err != nil {
 		grpc.SetTrailer(ctx, aphgrpc.ErrDatabaseInsert)
@@ -145,7 +162,8 @@ func (s *ContentService) StoreContent(ctx context.Context, r *content.StoreConte
 	// Check if namespace exists
 	var namespaceId int64
 	err = tx.Select("namespace_id").From(namespaceDbTable).
-		Where("name = $1", r.Data.Attributes.Namespace).QueryScalar(&namespaceId)
+		Where("name = $1", r.Data.Attributes.Namespace).
+		QueryScalar(&namespaceId)
 	if err != nil {
 		if strings.Contains(err.Error(), "no rows") {
 			err := tx.InsertInto(namespaceDbTable).
@@ -182,18 +200,27 @@ func (s *ContentService) StoreContent(ctx context.Context, r *content.StoreConte
 	return s.buildResource(context.TODO(), ctId, attr), nil
 }
 
-func (s *ContentService) UpdateContent(ctx context.Context, r *content.UpdateContentRequest) (*content.Content, error) {
+func (s *ContentService) UpdateContent(
+	ctx context.Context,
+	r *content.UpdateContentRequest,
+) (*content.Content, error) {
 	result, err := s.existsResource(r.Id)
 	if err != nil {
 		return &content.Content{}, aphgrpc.HandleError(ctx, err)
 	}
 	if !result {
 		grpc.SetTrailer(ctx, aphgrpc.ErrNotFound)
-		return &content.Content{}, status.Error(codes.NotFound, fmt.Sprintf("id %d not found", r.Id))
+		return &content.Content{}, status.Error(
+			codes.NotFound,
+			fmt.Sprintf("id %d not found", r.Id),
+		)
 	}
 	if err := r.Data.Attributes.Validate(); err != nil {
 		grpc.SetTrailer(ctx, aphgrpc.ErrDatabaseUpdate)
-		return &content.Content{}, status.Error(codes.InvalidArgument, err.Error())
+		return &content.Content{}, status.Error(
+			codes.InvalidArgument,
+			err.Error(),
+		)
 	}
 	dbct := &dbContentCore{}
 	tx, _ := s.Dbh.Begin()
@@ -221,14 +248,20 @@ func (s *ContentService) UpdateContent(ctx context.Context, r *content.UpdateCon
 	return s.buildResource(context.TODO(), dbct.ContentId, attr), nil
 }
 
-func (s *ContentService) DeleteContent(ctx context.Context, r *content.ContentIdRequest) (*empty.Empty, error) {
+func (s *ContentService) DeleteContent(
+	ctx context.Context,
+	r *content.ContentIdRequest,
+) (*empty.Empty, error) {
 	result, err := s.existsResource(r.Id)
 	if err != nil {
 		return &empty.Empty{}, aphgrpc.HandleError(ctx, err)
 	}
 	if !result {
 		grpc.SetTrailer(ctx, aphgrpc.ErrNotFound)
-		return &empty.Empty{}, status.Error(codes.NotFound, fmt.Sprintf("id %d not found", r.Id))
+		return &empty.Empty{}, status.Error(
+			codes.NotFound,
+			fmt.Sprintf("id %d not found", r.Id),
+		)
 	}
 	tx, _ := s.Dbh.Begin()
 	defer tx.AutoRollback()
@@ -277,10 +310,16 @@ func (s *ContentService) getResource(id int64) (*content.Content, error) {
 	if err != nil {
 		return &content.Content{}, err
 	}
-	return s.buildResource(context.TODO(), id, s.dbToResourceAttributes(dct)), nil
+	return s.buildResource(
+		context.TODO(),
+		id,
+		s.dbToResourceAttributes(dct),
+	), nil
 }
 
-func (s *ContentService) getResourceBySlug(slug string) (*content.Content, error) {
+func (s *ContentService) getResourceBySlug(
+	slug string,
+) (*content.Content, error) {
 	dct := &dbContent{}
 	err := s.Dbh.Select(
 		fmt.Sprintf("%s.*", contentDbTable),
@@ -297,11 +336,19 @@ func (s *ContentService) getResourceBySlug(slug string) (*content.Content, error
 	if err != nil {
 		return &content.Content{}, err
 	}
-	return s.buildResource(context.TODO(), dct.ContentId, s.dbToResourceAttributes(dct)), nil
+	return s.buildResource(
+		context.TODO(),
+		dct.ContentId,
+		s.dbToResourceAttributes(dct),
+	), nil
 }
 
 // -- Functions that builds up the various parts of the final content resource objects
-func (s *ContentService) buildResourceData(ctx context.Context, id int64, attr *content.ContentAttributes) *content.ContentData {
+func (s *ContentService) buildResourceData(
+	ctx context.Context,
+	id int64,
+	attr *content.ContentAttributes,
+) *content.ContentData {
 	return &content.ContentData{
 		Attributes: attr,
 		Id:         id,
@@ -312,7 +359,11 @@ func (s *ContentService) buildResourceData(ctx context.Context, id int64, attr *
 	}
 }
 
-func (s *ContentService) buildResource(ctx context.Context, id int64, attr *content.ContentAttributes) *content.Content {
+func (s *ContentService) buildResource(
+	ctx context.Context,
+	id int64,
+	attr *content.ContentAttributes,
+) *content.Content {
 	return &content.Content{
 		Data: s.buildResourceData(ctx, id, attr),
 		Links: &jsonapi.Links{
@@ -322,7 +373,9 @@ func (s *ContentService) buildResource(ctx context.Context, id int64, attr *cont
 }
 
 // Functions that generates resource objects or parts of it from database mapped objects
-func (s *ContentService) dbToResourceAttributes(dct *dbContent) *content.ContentAttributes {
+func (s *ContentService) dbToResourceAttributes(
+	dct *dbContent,
+) *content.ContentAttributes {
 	ct, _ := dct.Content.Interpolate()
 	return &content.ContentAttributes{
 		Name:      aphgrpc.NullToString(dct.Name),
@@ -336,7 +389,9 @@ func (s *ContentService) dbToResourceAttributes(dct *dbContent) *content.Content
 	}
 }
 
-func (s *ContentService) dbCoreToResourceAttributes(dct *dbContentCore) *content.ContentAttributes {
+func (s *ContentService) dbCoreToResourceAttributes(
+	dct *dbContentCore,
+) *content.ContentAttributes {
 	ct, _ := dct.Content.Interpolate()
 	return &content.ContentAttributes{
 		Name:      aphgrpc.NullToString(dct.Name),
@@ -350,7 +405,9 @@ func (s *ContentService) dbCoreToResourceAttributes(dct *dbContentCore) *content
 }
 
 // Functions that generates database mapped objects from resource objects
-func (s *ContentService) attrTodbContent(attr *content.ContentAttributes) *dbContent {
+func (s *ContentService) attrTodbContent(
+	attr *content.ContentAttributes,
+) *dbContent {
 	return &dbContent{
 		Name:      dat.NullStringFrom(attr.Name),
 		Slug:      dat.NullStringFrom(attr.Slug),
@@ -363,19 +420,9 @@ func (s *ContentService) attrTodbContent(attr *content.ContentAttributes) *dbCon
 	}
 }
 
-func (s *ContentService) attrTodbContentCore(attr *content.ContentAttributes) *dbContentCore {
-	return &dbContentCore{
-		Name:      dat.NullStringFrom(attr.Name),
-		Slug:      dat.NullStringFrom(attr.Slug),
-		CreatedBy: dat.NullInt64From(attr.CreatedBy),
-		UpdatedBy: dat.NullInt64From(attr.UpdatedBy),
-		CreatedAt: dat.NullTimeFrom(aphgrpc.ProtoTimeStamp(attr.CreatedAt)),
-		UpdatedAt: dat.NullTimeFrom(aphgrpc.ProtoTimeStamp(attr.UpdatedAt)),
-		Content:   dat.JSONFromString(attr.Content),
-	}
-}
-
-func (s *ContentService) createAttrTodbContentCore(attr *content.NewContentAttributes) *dbContentCore {
+func (s *ContentService) createAttrTodbContentCore(
+	attr *content.NewContentAttributes,
+) *dbContentCore {
 	return &dbContentCore{
 		Name:      dat.NullStringFrom(attr.Name),
 		CreatedBy: dat.NullInt64From(attr.CreatedBy),
@@ -390,5 +437,8 @@ func (s *ContentService) createAttrTodbContentCore(attr *content.NewContentAttri
 }
 
 func slug(s string) string {
-	return strings.Trim(noncharReg.ReplaceAllString(strings.ToLower(s), "-"), "-")
+	return strings.Trim(
+		noncharReg.ReplaceAllString(strings.ToLower(s), "-"),
+		"-",
+	)
 }
