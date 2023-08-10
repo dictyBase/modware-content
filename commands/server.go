@@ -170,7 +170,13 @@ func getPgxDbHandler(cltx *cli.Context) (*sql.DB, error) {
 		cltx.String("dictycontent-port"),
 		cltx.String("dictycontent-db"),
 	)
-	return sql.Open("pgx", cStr)
+
+	dbh, err := sql.Open("pgx", cStr)
+	if err != nil {
+		return &sql.DB{}, fmt.Errorf("error in opening database %s", err)
+	}
+
+	return dbh, nil
 }
 
 func getPgWrapper(c *cli.Context) (*runner.DB, error) {
@@ -179,13 +185,14 @@ func getPgWrapper(c *cli.Context) (*runner.DB, error) {
 	if err != nil {
 		return dbh, err
 	}
+
 	return runner.NewDB(h, "postgres"), nil
 }
 
-func getLogger(c *cli.Context) *logrus.Entry {
+func getLogger(cltx *cli.Context) *logrus.Entry {
 	log := logrus.New()
 	log.Out = os.Stderr
-	switch c.GlobalString("log-format") {
+	switch cltx.GlobalString("log-format") {
 	case "text":
 		log.Formatter = &logrus.TextFormatter{
 			TimestampFormat: "0ExitError/Jan/2006:15:04:05",
@@ -195,7 +202,7 @@ func getLogger(c *cli.Context) *logrus.Entry {
 			TimestampFormat: "0ExitError/Jan/2006:15:04:05",
 		}
 	}
-	l := c.GlobalString("log-level")
+	l := cltx.GlobalString("log-level")
 	switch l {
 	case "debug":
 		log.Level = logrus.DebugLevel
