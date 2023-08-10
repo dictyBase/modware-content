@@ -136,7 +136,7 @@ func (s *ContentService) StoreContent(
 ) (*content.Content, error) {
 	emptyCt := new(content.Content)
 	if err := req.Data.Attributes.Validate(); err != nil {
-		grpc.SetTrailer(ctx, aphgrpc.ErrDatabaseInsert)
+		grpc.SetTrailer(ctx, aphgrpc.ErrDatabaseInsert) //nolint:errcheck
 
 		return emptyCt, status.Error(codes.InvalidArgument, err.Error())
 	}
@@ -160,7 +160,7 @@ func (s *ContentService) StoreContent(
 		)
 	}
 	txn, _ := s.Dbh.Begin()
-	defer txn.AutoRollback()
+	defer txn.AutoRollback() //nolint:errcheck
 	// Check if namespace exists
 	var namespaceId int64
 	err = txn.Select("namespace_id").From(namespaceDbTable).
@@ -193,8 +193,8 @@ func (s *ContentService) StoreContent(
 		return &content.Content{}, aphgrpc.HandleInsertError(ctx, err)
 	}
 
-	txn.Commit()
-	grpc.SetTrailer(ctx, metadata.Pairs("method", "POST"))
+	txn.Commit()                                           //nolint:errcheck
+	grpc.SetTrailer(ctx, metadata.Pairs("method", "POST")) //nolint:errcheck
 	attr := s.dbCoreToResourceAttributes(dbct)
 	attr.CreatedAt = aphgrpc.NullToTime(atn)
 	attr.UpdatedAt = attr.CreatedAt
@@ -212,14 +212,16 @@ func (s *ContentService) UpdateContent(
 		return &content.Content{}, aphgrpc.HandleError(ctx, err)
 	}
 	if !result {
-		grpc.SetTrailer(ctx, aphgrpc.ErrNotFound)
+		grpc.SetTrailer(ctx, aphgrpc.ErrNotFound) //nolint:errcheck
+
 		return &content.Content{}, status.Error(
 			codes.NotFound,
 			fmt.Sprintf("id %d not found", req.Id),
 		)
 	}
 	if err := req.Data.Attributes.Validate(); err != nil {
-		grpc.SetTrailer(ctx, aphgrpc.ErrDatabaseUpdate)
+		grpc.SetTrailer(ctx, aphgrpc.ErrDatabaseUpdate) //nolint:errcheck
+
 		return &content.Content{}, status.Error(
 			codes.InvalidArgument,
 			err.Error(),
@@ -227,7 +229,7 @@ func (s *ContentService) UpdateContent(
 	}
 	dbct := &dbContentCore{}
 	txn, _ := s.Dbh.Begin()
-	defer txn.AutoRollback()
+	defer txn.AutoRollback() //nolint:errcheck
 	err = txn.Update(contentDbTable).
 		Set("updated_by", req.Data.Attributes.UpdatedBy).
 		Set("content", req.Data.Attributes.Content).
@@ -235,19 +237,22 @@ func (s *ContentService) UpdateContent(
 		Returning(contentCols...).
 		QueryStruct(dbct)
 	if err != nil {
-		grpc.SetTrailer(ctx, aphgrpc.ErrDatabaseUpdate)
+		grpc.SetTrailer(ctx, aphgrpc.ErrDatabaseUpdate) //nolint:errcheck
+
 		return &content.Content{}, status.Error(codes.Internal, err.Error())
 	}
 	var namespace string
 	err = txn.Select("name").From(namespaceDbTable).
 		Where("namespace_id = $1", dbct.NamespaceId).QueryScalar(&namespace)
 	if err != nil {
-		grpc.SetTrailer(ctx, aphgrpc.ErrDatabaseUpdate)
+		grpc.SetTrailer(ctx, aphgrpc.ErrDatabaseUpdate) //nolint:errcheck
+
 		return &content.Content{}, status.Error(codes.Internal, err.Error())
 	}
-	txn.Commit()
+	txn.Commit() //nolint:errcheck
 	attr := s.dbCoreToResourceAttributes(dbct)
 	attr.Namespace = namespace
+
 	return s.buildResource(context.TODO(), dbct.ContentId, attr), nil
 }
 
@@ -260,20 +265,25 @@ func (s *ContentService) DeleteContent(
 		return &empty.Empty{}, aphgrpc.HandleError(ctx, err)
 	}
 	if !result {
-		grpc.SetTrailer(ctx, aphgrpc.ErrNotFound)
+		grpc.SetTrailer(ctx, aphgrpc.ErrNotFound) //nolint:errcheck
+
 		return &empty.Empty{}, status.Error(
 			codes.NotFound,
 			fmt.Sprintf("id %d not found", req.Id),
 		)
 	}
 	txn, _ := s.Dbh.Begin()
-	defer txn.AutoRollback()
-	_, err = txn.DeleteFrom(contentDbTable).Where(prKeyCol+" = $1", req.Id).Exec()
+	defer txn.AutoRollback() //nolint:errcheck
+	_, err = txn.DeleteFrom(contentDbTable).
+		Where(prKeyCol+" = $1", req.Id).
+		Exec()
 	if err != nil {
-		grpc.SetTrailer(ctx, aphgrpc.ErrDatabaseDelete)
+		grpc.SetTrailer(ctx, aphgrpc.ErrDatabaseDelete) //nolint:errcheck
+
 		return &empty.Empty{}, status.Error(codes.Internal, err.Error())
 	}
-	txn.Commit()
+	txn.Commit() //nolint:errcheck
+
 	return &empty.Empty{}, nil
 }
 
@@ -287,11 +297,12 @@ func (s *ContentService) existsResource(idx int64) (bool, error) {
 		idx,
 	).Exec()
 	if err != nil {
-		return false, err
+		return false, fmt.Errorf("error in database query %s", err)
 	}
 	if resp.RowsAffected != 1 {
 		return false, nil
 	}
+
 	return true, nil
 }
 
@@ -311,8 +322,9 @@ func (s *ContentService) getResource(idx int64) (*content.Content, error) {
 		idx,
 	).QueryStruct(dct)
 	if err != nil {
-		return &content.Content{}, err
+		return &content.Content{}, fmt.Errorf("error in database query %s", err)
 	}
+
 	return s.buildResource(
 		context.TODO(),
 		idx,
@@ -337,8 +349,9 @@ func (s *ContentService) getResourceBySlug(
 		slug,
 	).QueryStruct(dct)
 	if err != nil {
-		return &content.Content{}, err
+		return &content.Content{}, fmt.Errorf("error in database query %s", err)
 	}
+
 	return s.buildResource(
 		context.TODO(),
 		dct.ContentId,
@@ -376,11 +389,13 @@ func (s *ContentService) buildResource(
 	}
 }
 
-// Functions that generates resource objects or parts of it from database mapped objects
+// Functions that generates resource objects or parts of it from database mapped
+// objects.
 func (s *ContentService) dbToResourceAttributes(
 	dct *dbContent,
 ) *content.ContentAttributes {
-	ct, _ := dct.Content.Interpolate()
+	ctn, _ := dct.Content.Interpolate()
+
 	return &content.ContentAttributes{
 		Name:      aphgrpc.NullToString(dct.Name),
 		Slug:      aphgrpc.NullToString(dct.Slug),
@@ -389,14 +404,15 @@ func (s *ContentService) dbToResourceAttributes(
 		Namespace: aphgrpc.NullToString(dct.Namespace),
 		CreatedAt: aphgrpc.NullToTime(dct.CreatedAt),
 		UpdatedAt: aphgrpc.NullToTime(dct.UpdatedAt),
-		Content:   ct,
+		Content:   ctn,
 	}
 }
 
 func (s *ContentService) dbCoreToResourceAttributes(
 	dct *dbContentCore,
 ) *content.ContentAttributes {
-	ct, _ := dct.Content.Interpolate()
+	ctn, _ := dct.Content.Interpolate()
+
 	return &content.ContentAttributes{
 		Name:      aphgrpc.NullToString(dct.Name),
 		Slug:      aphgrpc.NullToString(dct.Slug),
@@ -404,11 +420,9 @@ func (s *ContentService) dbCoreToResourceAttributes(
 		UpdatedBy: aphgrpc.NullToInt64(dct.UpdatedBy),
 		CreatedAt: aphgrpc.NullToTime(dct.CreatedAt),
 		UpdatedAt: aphgrpc.NullToTime(dct.UpdatedAt),
-		Content:   ct,
+		Content:   ctn,
 	}
 }
-
-
 
 func (s *ContentService) createAttrTodbContentCore(
 	attr *content.NewContentAttributes,
