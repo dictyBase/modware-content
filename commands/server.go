@@ -8,6 +8,7 @@ import (
 	"net"
 	"net/http"
 	"os"
+	"time"
 
 	"github.com/dictyBase/apihelpers/aphgrpc"
 	pb "github.com/dictyBase/go-genproto/dictybaseapis/content"
@@ -29,6 +30,7 @@ import (
 )
 
 const ExitError = 2
+const Timeout = 10
 
 func startServers(
 	grpcS *grpc.Server,
@@ -52,7 +54,10 @@ func startServers(
 		OptionsPassthrough: false,
 		AllowedHeaders:     []string{"*"},
 	})
-	httpS := &http.Server{Handler: cors.Handler(httpMux)}
+	httpS := &http.Server{
+		Handler:           cors.Handler(httpMux),
+		ReadHeaderTimeout: time.Duration(Timeout) * time.Second,
+	}
 	ech := make(chan error, ExitError)
 	go func() { ech <- grpcS.Serve(grpcL) }()
 	go func() { ech <- httpS.Serve(httpL) }()
@@ -71,6 +76,7 @@ func startServers(
 		icount++
 		if cap(ech) == icount {
 			close(ech)
+
 			break
 		}
 	}
