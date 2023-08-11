@@ -39,7 +39,7 @@ require (
 	github.com/shopspring/decimal v0.0.0-20200105231215-408a2507e114 // indirect
 	github.com/sirupsen/logrus v1.9.3
 	github.com/soheilhy/cmux v0.1.5
-	github.com/urfave/cli v1.22.5
+	github.com/urfave/cli v1.22.14
 	google.golang.org/genproto v0.0.0-20200806141610-86f49bd18e98 // indirect
 	google.golang.org/grpc v1.37.0
 	gopkg.in/check.v1 v1.0.0-20190902080502-41f04d3bba15 // indirect
