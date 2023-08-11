@@ -19,6 +19,7 @@ import (
 	_ "github.com/jackc/pgx/stdlib"
 	"github.com/pressly/goose"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials/insecure"
 	runner "gopkg.in/mgutz/dat.v2/sqlx-runner"
 	"gopkg.in/src-d/go-git.v4"
 )
@@ -209,7 +210,7 @@ func TestCreate(t *testing.T) {
 	conn, err := grpc.DialContext(
 		ctx,
 		"localhost"+port,
-		grpc.WithInsecure(),
+		grpc.WithTransportCredentials(insecure.NewCredentials()),
 		grpc.WithBlock(),
 	)
 	if err != nil {
@@ -243,7 +244,10 @@ func TestCreate(t *testing.T) {
 }
 
 func TestGetBySlug(t *testing.T) {
-	conn, err := grpc.Dial("localhost"+port, grpc.WithInsecure())
+	conn, err := grpc.Dial(
+		"localhost"+port,
+		grpc.WithTransportCredentials(insecure.NewCredentials()),
+	)
 	if err != nil {
 		t.Fatalf("could not connect to grpc server %s\n", err)
 	}
@@ -272,7 +276,10 @@ func TestGetBySlug(t *testing.T) {
 }
 
 func TestGet(t *testing.T) {
-	conn, err := grpc.Dial("localhost"+port, grpc.WithInsecure())
+	conn, err := grpc.Dial(
+		"localhost"+port,
+		grpc.WithTransportCredentials(insecure.NewCredentials()),
+	)
 	if err != nil {
 		t.Fatalf("could not connect to grpc server %s\n", err)
 	}
@@ -301,7 +308,10 @@ func TestGet(t *testing.T) {
 }
 
 func TestUpdate(t *testing.T) {
-	conn, err := grpc.Dial("localhost"+port, grpc.WithInsecure())
+	conn, err := grpc.Dial(
+		"localhost"+port,
+		grpc.WithTransportCredentials(insecure.NewCredentials()),
+	)
 	if err != nil {
 		t.Fatalf("could not connect to grpc server %s\n", err)
 	}
@@ -358,7 +368,10 @@ func TestUpdate(t *testing.T) {
 }
 
 func TestDelete(t *testing.T) {
-	conn, err := grpc.Dial("localhost"+port, grpc.WithInsecure())
+	conn, err := grpc.Dial(
+		"localhost"+port,
+		grpc.WithTransportCredentials(insecure.NewCredentials()),
+	)
 	if err != nil {
 		t.Fatalf("could not connect to grpc server %s\n", err)
 	}
