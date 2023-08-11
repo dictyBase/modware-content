@@ -15,7 +15,6 @@ import (
 	"github.com/dictyBase/modware-content/message/nats"
 	"github.com/dictyBase/modware-content/server"
 	"github.com/go-chi/cors"
-	grpc_middleware "github.com/grpc-ecosystem/go-grpc-middleware"
 	grpc_logrus "github.com/grpc-ecosystem/go-grpc-middleware/logging/logrus"
 	grpc_ctxtags "github.com/grpc-ecosystem/go-grpc-middleware/tags"
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
@@ -138,7 +137,7 @@ func createHTTPServeMux() *runtime.ServeMux {
 
 func createGRPCServer(c *cli.Context) *grpc.Server {
 	return grpc.NewServer(
-		grpc_middleware.WithUnaryServerChain(
+		grpc.ChainUnaryInterceptor(
 			grpc_ctxtags.UnaryServerInterceptor(),
 			grpc_logrus.UnaryServerInterceptor(getLogger(c)),
 		),
