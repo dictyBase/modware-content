@@ -19,36 +19,49 @@ import (
 	_ "github.com/jackc/pgx/stdlib"
 	"github.com/pressly/goose"
 	"google.golang.org/grpc"
-
 	runner "gopkg.in/mgutz/dat.v2/sqlx-runner"
 	"gopkg.in/src-d/go-git.v4"
-
-	_ "github.com/jackc/pgx/stdlib"
-	"github.com/pressly/goose"
 )
 
-var db *sql.DB
+var dbh *sql.DB
+
 var schemaRepo string = "https://github.com/dictybase-docker/dictycontent-schema"
-var pgAddr = fmt.Sprintf("%s:%s", os.Getenv("POSTGRES_HOST"), os.Getenv("POSTGRES_PORT"))
+
+var pgAddr = fmt.Sprintf(
+	"%s:%s",
+	os.Getenv("POSTGRES_HOST"),
+	os.Getenv("POSTGRES_PORT"),
+)
 var pgConn = fmt.Sprintf(
 	"postgres://%s:%s@%s/%s?sslmode=disable",
-	os.Getenv("POSTGRES_USER"), os.Getenv("POSTGRES_PASSWORD"), pgAddr, os.Getenv("POSTGRES_DB"))
+	os.Getenv(
+		"POSTGRES_USER",
+	),
+	os.Getenv("POSTGRES_PASSWORD"),
+	pgAddr,
+	os.Getenv("POSTGRES_DB"),
+)
 
 const (
 	port   = ":9596"
 	schema = "content"
 )
 
-type fakeRequest struct {
-	name string
-}
 type fakeRequest struct{}
 
-func (f *fakeRequest) UserRequest(s string, r *pubsub.IdRequest, t time.Duration) (*pubsub.UserReply, error) {
+func (f *fakeRequest) UserRequest(
+	s string,
+	r *pubsub.IdRequest,
+	t time.Duration,
+) (*pubsub.UserReply, error) {
 	return &pubsub.UserReply{Exist: true}, nil
 }
 
-func (f *fakeRequest) UserRequestWithContext(ctx context.Context, s string, r *pubsub.IdRequest) (*pubsub.UserReply, error) {
+func (f *fakeRequest) UserRequestWithContext(
+	ctx context.Context,
+	s string,
+	r *pubsub.IdRequest,
+) (*pubsub.UserReply, error) {
 	return &pubsub.UserReply{Exist: true}, nil
 }
 
@@ -78,10 +91,8 @@ type TestPostgres struct {
 }
 
 func NewTestPostgresFromEnv() (*TestPostgres, error) {
-	pg := new(TestPostgres)
 	pgt := new(TestPostgres)
 	if err := CheckPostgresEnv(); err != nil {
-		return pg, err
 		return pgt, err
 	}
 	dbh, err := sql.Open("pgx", pgConn)
@@ -125,8 +136,11 @@ func cloneDbSchemaRepo() (string, error) {
 func runGRPCServer(db *sql.DB) {
 	dbh := runner.NewDB(db, "postgres")
 	grpcS := grpc.NewServer()
-	pb.RegisterContentServiceServer(grpcS, NewContentService(dbh, &fakeRequest{}))
-	lis, err := net.Listen("tcp", port)
+	pb.RegisterContentServiceServer(
+		grpcS,
+		NewContentService(dbh, &fakeRequest{}),
+	)
+	lis, err := net.Listen("tcp", "localhost"+port)
 	if err != nil {
 		log.Fatalf("error listening to grpc port %s", err)
 	}
@@ -137,7 +151,6 @@ func runGRPCServer(db *sql.DB) {
 }
 
 func TestMain(m *testing.M) {
-	pg, err := NewTestPostgresFromEnv()
 	pgt, err := NewTestPostgresFromEnv()
 	if err != nil {
 		log.Fatalf(
@@ -189,13 +202,21 @@ func NewStoreContent(name string) *pb.StoreContentRequest {
 func TestCreate(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
-	conn, err := grpc.DialContext(ctx, "localhost"+port, grpc.WithInsecure(), grpc.WithBlock())
+	conn, err := grpc.DialContext(
+		ctx,
+		"localhost"+port,
+		grpc.WithInsecure(),
+		grpc.WithBlock(),
+	)
 	if err != nil {
 		t.Fatalf("could not connect to grpc server %s\n", err)
 	}
 	defer conn.Close()
 	client := pb.NewContentServiceClient(conn)
-	nct, err := client.StoreContent(context.Background(), NewStoreContent("catalog"))
+	nct, err := client.StoreContent(
+		context.Background(),
+		NewStoreContent("catalog"),
+	)
 	if err != nil {
 		t.Fatalf("could not store the content %s\n", err)
 	}
@@ -203,10 +224,17 @@ func TestCreate(t *testing.T) {
 		t.Fatalf("No id attribute value %d", nct.Data.Id)
 	}
 	if nct.Links.Self != nct.Data.Links.Self {
-		t.Fatalf("top link %s does not match resource link %s", nct.Links.Self, nct.Data.Links.Self)
+		t.Fatalf(
+			"top link %s does not match resource link %s",
+			nct.Links.Self,
+			nct.Data.Links.Self,
+		)
 	}
 	if nct.Data.Attributes.Slug != "stockcenter-catalog" {
-		t.Fatalf("expected slug did not match with %s", nct.Data.Attributes.Slug)
+		t.Fatalf(
+			"expected slug did not match with %s",
+			nct.Data.Attributes.Slug,
+		)
 	}
 }
 
@@ -217,19 +245,25 @@ func TestGetBySlug(t *testing.T) {
 	}
 	defer conn.Close()
 	client := pb.NewContentServiceClient(conn)
-	nct, err := client.StoreContent(context.Background(), NewStoreContent("payment information"))
+	nct, err := client.StoreContent(
+		context.Background(),
+		NewStoreContent("payment information"),
+	)
 	if err != nil {
 		t.Fatalf("could not store the content %s\n", err)
 	}
-	ct, err := client.GetContentBySlug(context.Background(), &pb.ContentRequest{Slug: "stockcenter-payment-information"})
+	ctgs, err := client.GetContentBySlug(
+		context.Background(),
+		&pb.ContentRequest{Slug: "stockcenter-payment-information"},
+	)
 	if err != nil {
 		t.Fatalf("could not retrieve content by %d Id", nct.Data.Id)
 	}
-	if nct.Data.Id != ct.Data.Id {
-		t.Errorf("expected id %d did not match %d", ct.Data.Id, nct.Data.Id)
+	if nct.Data.Id != ctgs.Data.Id {
+		t.Errorf("expected id %d did not match %d", ctgs.Data.Id, nct.Data.Id)
 	}
-	if ct.Data.Attributes.Slug != "stockcenter-payment-information" {
-		t.Fatalf("expected slug did not match %s", ct.Data.Attributes.Slug)
+	if ctgs.Data.Attributes.Slug != "stockcenter-payment-information" {
+		t.Fatalf("expected slug did not match %s", ctgs.Data.Attributes.Slug)
 	}
 }
 
@@ -240,19 +274,25 @@ func TestGet(t *testing.T) {
 	}
 	defer conn.Close()
 	client := pb.NewContentServiceClient(conn)
-	nct, err := client.StoreContent(context.Background(), NewStoreContent("order information"))
+	nct, err := client.StoreContent(
+		context.Background(),
+		NewStoreContent("order information"),
+	)
 	if err != nil {
 		t.Fatalf("could not store the content %s\n", err)
 	}
-	ct, err := client.GetContent(context.Background(), &pb.ContentIdRequest{Id: nct.Data.Id})
+	ctg, err := client.GetContent(
+		context.Background(),
+		&pb.ContentIdRequest{Id: nct.Data.Id},
+	)
 	if err != nil {
 		t.Fatalf("could not retrieve content by %d Id", nct.Data.Id)
 	}
-	if nct.Data.Id != ct.Data.Id {
-		t.Errorf("expected id %d did not match %d", ct.Data.Id, nct.Data.Id)
+	if nct.Data.Id != ctg.Data.Id {
+		t.Errorf("expected id %d did not match %d", ctg.Data.Id, nct.Data.Id)
 	}
-	if ct.Data.Attributes.Slug != "stockcenter-order-information" {
-		t.Fatalf("expected slug did not match %s", ct.Data.Attributes.Slug)
+	if ctg.Data.Attributes.Slug != "stockcenter-order-information" {
+		t.Fatalf("expected slug did not match %s", ctg.Data.Attributes.Slug)
 	}
 }
 
@@ -263,7 +303,10 @@ func TestUpdate(t *testing.T) {
 	}
 	defer conn.Close()
 	client := pb.NewContentServiceClient(conn)
-	nct, err := client.StoreContent(context.Background(), NewStoreContent("plasmid catalog"))
+	nct, err := client.StoreContent(
+		context.Background(),
+		NewStoreContent("plasmid catalog"),
+	)
 	if err != nil {
 		t.Fatalf("could not store the content %s\n", err)
 	}
@@ -278,46 +321,56 @@ func TestUpdate(t *testing.T) {
 			},
 		},
 	}
-	ct, err := client.UpdateContent(context.Background(), uct)
+	ctu, err := client.UpdateContent(context.Background(), uct)
 	if err != nil {
 		t.Fatalf("could not update content %s", err)
 	}
-	if ct.Data.Attributes.Namespace != nct.Data.Attributes.Namespace {
+	if ctu.Data.Attributes.Namespace != nct.Data.Attributes.Namespace {
 		t.Fatalf(
 			"expected namespace %s did not match %s",
 			nct.Data.Attributes.Namespace,
-			ct.Data.Attributes.Namespace,
+			ctu.Data.Attributes.Namespace,
 		)
 	}
-	if ct.Data.Attributes.UpdatedBy != nct.Data.Attributes.UpdatedBy+5 {
+	if ctu.Data.Attributes.UpdatedBy != nct.Data.Attributes.UpdatedBy+5 {
 		t.Fatalf(
 			"expected updated_by %d did not match %d",
 			nct.Data.Attributes.UpdatedBy+5,
-			ct.Data.Attributes.UpdatedBy,
+			ctu.Data.Attributes.UpdatedBy,
 		)
 	}
 	cjson := &ContentJSON{}
-	err = json.Unmarshal([]byte(ct.Data.Attributes.Content), cjson)
+	err = json.Unmarshal([]byte(ctu.Data.Attributes.Content), cjson)
 	if err != nil {
 		t.Fatalf("unable to decode content json %s\n", err)
 	}
 	if cjson.Text != "text" {
-		t.Fatalf("expected json field text %s did not match %s", "text", cjson.Text)
+		t.Fatalf(
+			"expected json field text %s did not match %s",
+			"text",
+			cjson.Text,
+		)
 	}
 }
 
-func TesDelete(t *testing.T) {
+func TestDelete(t *testing.T) {
 	conn, err := grpc.Dial("localhost"+port, grpc.WithInsecure())
 	if err != nil {
 		t.Fatalf("could not connect to grpc server %s\n", err)
 	}
 	defer conn.Close()
 	client := pb.NewContentServiceClient(conn)
-	nct, err := client.StoreContent(context.Background(), NewStoreContent("deposit information"))
+	nct, err := client.StoreContent(
+		context.Background(),
+		NewStoreContent("deposit information"),
+	)
 	if err != nil {
 		t.Fatalf("could not store the content %s\n", err)
 	}
-	_, err = client.DeleteContent(context.Background(), &pb.ContentIdRequest{Id: nct.Data.Id})
+	_, err = client.DeleteContent(
+		context.Background(),
+		&pb.ContentIdRequest{Id: nct.Data.Id},
+	)
 	if err != nil {
 		t.Fatalf("could not delete content by %d Id", nct.Data.Id)
 	}
