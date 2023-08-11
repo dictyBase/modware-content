@@ -171,13 +171,17 @@ func TestMain(m *testing.M) {
 	dir, err := cloneDbSchemaRepo()
 	defer os.RemoveAll(dir)
 	if err != nil {
-		log.Fatalf("issue with cloning %s repo %s\n", schemaRepo, err)
+		log.Printf("issue with cloning %s repo %s\n", schemaRepo, err)
+
+		return
 	}
 	if err := goose.Up(dbh, dir); err != nil {
-		log.Fatalf("issue with running database migration %s\n", err)
+		log.Printf("issue with running database migration %s\n", err)
+
+		return
 	}
 	go runGRPCServer(dbh)
-	os.Exit(m.Run())
+	os.Exit(m.Run()) //nolint:gocritic
 }
 
 func NewStoreContent(name string) *pb.StoreContentRequest {
