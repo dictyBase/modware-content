@@ -6,14 +6,17 @@ import (
 	"github.com/urfave/cli"
 )
 
+const ExitError = 2
+
 func ValidateServerArgs(c *cli.Context) error {
 	for _, p := range []string{"dictycontent-pass", "dictycontent-db", "dictycontent-user"} {
 		if len(c.String(p)) == 0 {
 			return cli.NewExitError(
 				fmt.Sprintf("argument %s is missing", p),
-				2,
+				ExitError,
 			)
 		}
 	}
+
 	return nil
 }

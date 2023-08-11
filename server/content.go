@@ -6,19 +6,18 @@ import (
 	"regexp"
 	"strings"
 
+	"github.com/dictyBase/apihelpers/aphgrpc"
+	"github.com/dictyBase/go-genproto/dictybaseapis/api/jsonapi"
+	"github.com/dictyBase/go-genproto/dictybaseapis/content"
+	"github.com/dictyBase/go-genproto/dictybaseapis/pubsub"
 	"github.com/dictyBase/modware-content/message"
+	"github.com/golang/protobuf/ptypes/empty"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/status"
 	dat "gopkg.in/mgutz/dat.v2/dat"
 	runner "gopkg.in/mgutz/dat.v2/sqlx-runner"
-
-	"github.com/dictyBase/apihelpers/aphgrpc"
-	"github.com/dictyBase/go-genproto/dictybaseapis/api/jsonapi"
-	"github.com/dictyBase/go-genproto/dictybaseapis/content"
-	"github.com/dictyBase/go-genproto/dictybaseapis/pubsub"
-	"github.com/golang/protobuf/ptypes/empty"
 )
 
 const (
