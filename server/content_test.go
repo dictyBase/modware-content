@@ -16,6 +16,8 @@ import (
 
 	pb "github.com/dictyBase/go-genproto/dictybaseapis/content"
 	"github.com/dictyBase/go-genproto/dictybaseapis/pubsub"
+	_ "github.com/jackc/pgx/stdlib"
+	"github.com/pressly/goose"
 	"google.golang.org/grpc"
 
 	runner "gopkg.in/mgutz/dat.v2/sqlx-runner"
@@ -40,6 +42,7 @@ const (
 type fakeRequest struct {
 	name string
 }
+type fakeRequest struct{}
 
 func (f *fakeRequest) UserRequest(s string, r *pubsub.IdRequest, t time.Duration) (*pubsub.UserReply, error) {
 	return &pubsub.UserReply{Exist: true}, nil
@@ -66,6 +69,7 @@ func CheckPostgresEnv() error {
 			return fmt.Errorf("env %s is not set", e)
 		}
 	}
+
 	return nil
 }
 
@@ -75,38 +79,47 @@ type TestPostgres struct {
 
 func NewTestPostgresFromEnv() (*TestPostgres, error) {
 	pg := new(TestPostgres)
+	pgt := new(TestPostgres)
 	if err := CheckPostgresEnv(); err != nil {
 		return pg, err
+		return pgt, err
 	}
 	dbh, err := sql.Open("pgx", pgConn)
 	if err != nil {
-		return pg, err
+		return pgt, fmt.Errorf("error in opening db connection %s", err)
 	}
 	timeout, err := time.ParseDuration("28s")
 	if err != nil {
-		return pg, err
+		return pgt, fmt.Errorf("error in parsing time %s", err)
 	}
 	t1 := time.Now()
 	for {
 		if err := dbh.Ping(); err != nil {
 			if time.Since(t1).Seconds() > timeout.Seconds() {
-				return pg, errors.New("timed out, no connection retrieved")
+				return pgt, errors.New("timed out, no connection retrieved")
 			}
+
 			continue
 		}
+
 		break
 	}
-	pg.DB = dbh
-	return pg, nil
+	pgt.DB = dbh
+
+	return pgt, nil
 }
 
 func cloneDbSchemaRepo() (string, error) {
 	path, err := ioutil.TempDir("", "content")
 	if err != nil {
-		return path, err
+		return path, fmt.Errorf("error in creating temp dir %s", err)
 	}
 	_, err = git.PlainClone(path, false, &git.CloneOptions{URL: schemaRepo})
-	return path, err
+	if err != nil {
+		return path, fmt.Errorf("error in cloing to path %s", err)
+	}
+
+	return path, nil
 }
 
 func runGRPCServer(db *sql.DB) {
@@ -125,16 +138,20 @@ func runGRPCServer(db *sql.DB) {
 
 func TestMain(m *testing.M) {
 	pg, err := NewTestPostgresFromEnv()
+	pgt, err := NewTestPostgresFromEnv()
 	if err != nil {
-		log.Fatalf("unable to construct new NewTestPostgresFromEnv instance %s", err)
+		log.Fatalf(
+			"unable to construct new NewTestPostgresFromEnv instance %s",
+			err,
+		)
 	}
-	db = pg.DB
+	dbh = pgt.DB
 	// create schema for this application
-	_, err = db.Exec(fmt.Sprintf("CREATE SCHEMA %s", schema))
+	_, err = dbh.Exec(fmt.Sprintf("CREATE SCHEMA %s", schema))
 	if err != nil {
 		log.Fatal(err)
 	}
-	_, err = db.Exec(fmt.Sprintf("SET search_path TO %s", schema))
+	_, err = dbh.Exec(fmt.Sprintf("SET search_path TO %s", schema))
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -143,10 +160,10 @@ func TestMain(m *testing.M) {
 	if err != nil {
 		log.Fatalf("issue with cloning %s repo %s\n", schemaRepo, err)
 	}
-	if err := goose.Up(db, dir); err != nil {
+	if err := goose.Up(dbh, dir); err != nil {
 		log.Fatalf("issue with running database migration %s\n", err)
 	}
-	go runGRPCServer(db)
+	go runGRPCServer(dbh)
 	os.Exit(m.Run())
 }
 
@@ -155,6 +172,7 @@ func NewStoreContent(name string) *pb.StoreContentRequest {
 		Paragraph: "paragraph",
 		Text:      "text",
 	})
+
 	return &pb.StoreContentRequest{
 		Data: &pb.StoreContentRequest_Data{
 			Type: "contents",
@@ -166,7 +184,6 @@ func NewStoreContent(name string) *pb.StoreContentRequest {
 			},
 		},
 	}
-
 }
 
 func TestCreate(t *testing.T) {
