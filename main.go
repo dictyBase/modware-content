@@ -1,11 +1,11 @@
 package main
 
 import (
+	"log"
 	"os"
 
 	"github.com/dictyBase/modware-content/commands"
 	"github.com/dictyBase/modware-content/validate"
-
 	"github.com/urfave/cli"
 )
 
@@ -82,5 +82,7 @@ func main() {
 			},
 		},
 	}
-	app.Run(os.Args)
+	if err := app.Run(os.Args); err != nil {
+		log.Fatalf("error in running command %s", err)
+	}
 }
