@@ -8,7 +8,7 @@ require (
 	github.com/dictyBase/modware-identity v0.0.0-20180408114222-99ac1fec3e82
 	github.com/fatih/structs v1.0.0 // indirect
 	github.com/garyburd/redigo v1.4.0 // indirect
-	github.com/go-chi/cors v1.2.0
+	github.com/go-chi/cors v1.2.1
 	github.com/go-sql-driver/mysql v1.5.0 // indirect
 	github.com/gofrs/uuid v3.2.0+incompatible // indirect
 	github.com/golang/protobuf v1.5.3
