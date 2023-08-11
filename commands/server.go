@@ -23,6 +23,7 @@ import (
 	"github.com/soheilhy/cmux"
 	"github.com/urfave/cli"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/grpc/reflection"
 	dat "gopkg.in/mgutz/dat.v2/dat"
 	runner "gopkg.in/mgutz/dat.v2/sqlx-runner"
@@ -110,7 +111,9 @@ func createCMux(lis net.Listener) (cmux.CMux, net.Listener, net.Listener) {
 }
 
 func registerHTTPHandler(c *cli.Context, httpMux *runtime.ServeMux) error {
-	opts := []grpc.DialOption{grpc.WithInsecure()}
+	opts := []grpc.DialOption{
+		grpc.WithTransportCredentials(insecure.NewCredentials()),
+	}
 	endP := fmt.Sprintf(":%s", c.String("port"))
 	err := pb.RegisterContentServiceHandlerFromEndpoint(
 		context.Background(),
