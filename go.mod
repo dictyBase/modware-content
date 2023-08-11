@@ -37,7 +37,7 @@ require (
 	github.com/pressly/goose v2.7.0+incompatible
 	github.com/satori/go.uuid v1.2.0 // indirect
 	github.com/shopspring/decimal v0.0.0-20200105231215-408a2507e114 // indirect
-	github.com/sirupsen/logrus v1.8.1
+	github.com/sirupsen/logrus v1.9.3
 	github.com/soheilhy/cmux v0.1.5
 	github.com/urfave/cli v1.22.5
 	google.golang.org/genproto v0.0.0-20200806141610-86f49bd18e98 // indirect
@@ -46,7 +46,6 @@ require (
 	gopkg.in/mgutz/dat.v2 v2.0.0-20171004160617-d76e4f81c4ef
 	gopkg.in/src-d/go-git.v4 v4.13.1
 	gopkg.in/stretchr/testify.v1 v1.2.2 // indirect
-	gopkg.in/yaml.v2 v2.2.4 // indirect
 )
 
 go 1.13
