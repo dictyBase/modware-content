@@ -1,6 +1,7 @@
 module github.com/dictyBase/modware-content
 
 require (
+	github.com/arangodb/go-driver v1.6.0 // indirect
 	github.com/cenkalti/backoff v1.1.0 // indirect
 	github.com/cockroachdb/apd v1.1.0 // indirect
 	github.com/dictyBase/apihelpers v0.0.0-20180407012836-a3b4e4c94490
@@ -9,6 +10,7 @@ require (
 	github.com/fatih/structs v1.0.0 // indirect
 	github.com/garyburd/redigo v1.4.0 // indirect
 	github.com/go-chi/cors v1.2.1
+	github.com/go-playground/validator/v10 v10.15.5 // indirect
 	github.com/go-sql-driver/mysql v1.5.0 // indirect
 	github.com/gofrs/uuid v3.2.0+incompatible // indirect
 	github.com/golang/protobuf v1.5.3
