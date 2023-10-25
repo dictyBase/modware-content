@@ -5,7 +5,7 @@ require (
 	github.com/cenkalti/backoff v1.1.0 // indirect
 	github.com/cockroachdb/apd v1.1.0 // indirect
 	github.com/dictyBase/apihelpers v0.0.0-20180407012836-a3b4e4c94490
-	github.com/dictyBase/go-genproto v0.0.0-20180501011042-c875deaa60d6
+	github.com/dictyBase/go-genproto v0.0.0-20231025200857-ea98d5043d59
 	github.com/dictyBase/modware-identity v0.0.0-20180408114222-99ac1fec3e82
 	github.com/fatih/structs v1.0.0 // indirect
 	github.com/garyburd/redigo v1.4.0 // indirect
@@ -27,7 +27,6 @@ require (
 	github.com/mgutz/logxi v0.0.0-20161027140823-aebf8a7d67ab // indirect
 	github.com/mgutz/str v1.2.0 // indirect
 	github.com/mgutz/to v1.0.0 // indirect
-	github.com/mwitkow/go-proto-validators v0.0.0-20170220212302-a55ca57f374a // indirect
 	github.com/nats-io/gnatsd v1.4.1 // indirect
 	github.com/nats-io/go-nats v1.7.2
 	github.com/nats-io/nkeys v0.1.3 // indirect
