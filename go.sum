@@ -826,6 +826,8 @@ github.com/dictyBase/apihelpers v0.0.0-20180407012836-a3b4e4c94490 h1:QQq5zIMWfd
 github.com/dictyBase/apihelpers v0.0.0-20180407012836-a3b4e4c94490/go.mod h1:WMCcrIvQoc3UBfA643QFDQufK2a+7mYGgkGxVFWfJus=
 github.com/dictyBase/go-genproto v0.0.0-20180501011042-c875deaa60d6 h1:iuoDXhUtBgKZAb274Ao17miq0moI70VDfKt5JCMCdyM=
 github.com/dictyBase/go-genproto v0.0.0-20180501011042-c875deaa60d6/go.mod h1:uvt0ErfvhRMAzfRo4y/99/XVhM1EduGOLxTZ9SYetRY=
+github.com/dictyBase/go-genproto v0.0.0-20231025200857-ea98d5043d59 h1:yfRIDf8GA0eE9pZjP55Xs2uRY3EjG5UTIM7UrUw8zaY=
+github.com/dictyBase/go-genproto v0.0.0-20231025200857-ea98d5043d59/go.mod h1:KY6iUqXl1lLq81WTW9u5DfZE58xM61PsGLSLwwtePlk=
 github.com/dictyBase/modware-identity v0.0.0-20180408114222-99ac1fec3e82 h1:f5LF9qhYMBSX+hD8hCb1N3vagL2Z8nrs0UDvd36ZSNc=
 github.com/dictyBase/modware-identity v0.0.0-20180408114222-99ac1fec3e82/go.mod h1:4xYBdEuON957lvYNUFjbuFT1odrXvKDtB+65BHqILdA=
 github.com/docopt/docopt-go v0.0.0-20180111231733-ee0de3bc6815/go.mod h1:WwZ+bS3ebgob9U8Nd0kOddGdZWjyMGR8Wziv+TBNwSE=
