@@ -17,3 +17,28 @@ type ContentDoc struct {
 	CreatedOn time.Time `json:"created_on"`
 	UpdatedOn time.Time `json:"updated_on"`
 }
+
+func Schema() []byte {
+	return []byte(`{
+		  "type": "object",
+		  "properties": {
+		    "name": {"type": "string"},
+		    "namespace": {"type": "string"},
+		    "slug": {"type": "string"},
+		    "content": {"type": "string"},
+		    "created_by": {"type": "string", "format": "email"},
+		    "updated_by": {"type": "string", "format": "email"},
+	 	    "created_on": {"type": "string", "format": "date-time"},
+	 	    "updated_on": {"type": "string", "format": "date-time"}
+		  },
+		  "required": [
+			"name", 
+			"namespace", 
+			"slug", 
+			"content", 
+			"created_by",
+			"created_on"
+		   ]
+		}
+	`)
+}
