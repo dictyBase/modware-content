@@ -26,7 +26,7 @@ func NewContentRepo(
 	}
 	arp.sess = sess
 	arp.database = dbs
-	schemaOptions = &driver.CollectionSchemaOptions{}
+	schemaOptions := &driver.CollectionSchemaOptions{}
 	schemaOptions.LoadRule(model.Schema())
 	contentCollection, err := dbs.FindOrCreateCollection(
 		collection,
