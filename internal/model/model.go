@@ -16,6 +16,7 @@ type ContentDoc struct {
 	Content   string    `json:"content"    validate:"required"`
 	CreatedOn time.Time `json:"created_on"`
 	UpdatedOn time.Time `json:"updated_on"`
+	NotFound  bool
 }
 
 func Schema() []byte {
