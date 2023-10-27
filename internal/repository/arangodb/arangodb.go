@@ -78,7 +78,33 @@ func NewContentRepo(
 func (arp *arangorepository) GetContentBySlug(
 	slug string,
 ) (*model.ContentDoc, error) {
-	panic("not implemented") // TODO: Implement
+	cntModel := &model.ContentDoc{}
+	resp, err := arp.database.GetRow(
+		ContentFindBySlug,
+		map[string]interface{}{
+			"@content_collection": arp.content.Name(),
+			"slug":                slug,
+		},
+	)
+	if err != nil {
+		return cntModel, fmt.Errorf(
+			"error in getting content by slug name %s",
+			err,
+		)
+	}
+	if resp.IsEmpty() {
+		cntModel.NotFound = true
+
+		return cntModel, nil
+	}
+	if err := resp.Read(cntModel); err != nil {
+		return cntModel, fmt.Errorf(
+			"error in reading response to struct %s",
+			err,
+		)
+	}
+
+	return cntModel, nil
 }
 
 func (arp *arangorepository) GetContent(id string) (*model.ContentDoc, error) {
