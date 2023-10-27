@@ -7,8 +7,6 @@ import (
 	apiflag "github.com/dictyBase/aphgrpc"
 	arangoflag "github.com/dictyBase/arangomanager/command/flag"
 	"github.com/dictyBase/modware-content/internal/app/server"
-	"github.com/dictyBase/modware-content/internal/app/validate"
-	"github.com/dictyBase/modware-content/validate"
 	"github.com/urfave/cli"
 )
 
@@ -34,7 +32,6 @@ func main() {
 			Name:   "start-server",
 			Usage:  "starts the modware-content microservice with HTTP and grpc backends",
 			Action: server.RunServer,
-			Before: validate.ServerArgs,
 			Flags:  getServerFlags(),
 		},
 	}
