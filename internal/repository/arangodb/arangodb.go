@@ -42,6 +42,35 @@ func NewContentRepo(
 		)
 	}
 	arp.content = contentCollection
+	_, _, err = dbs.EnsurePersistentIndex(
+		collection,
+		[]string{"slug", "namespace"},
+		&driver.EnsurePersistentIndexOptions{
+			Unique:       true,
+			InBackground: true,
+			Name:         "collection_slug_namespace_idx",
+		},
+	)
+	if err != nil {
+		return arp, fmt.Errorf(
+			"error in creating unique index for slug and namespace fields %s",
+			err,
+		)
+	}
+	_, _, err = dbs.EnsurePersistentIndex(
+		collection,
+		[]string{"name"},
+		&driver.EnsurePersistentIndexOptions{
+			InBackground: true,
+			Name:         "content_name_idx",
+		},
+	)
+	if err != nil {
+		return arp, fmt.Errorf(
+			"error in creating index for name field %s",
+			err,
+		)
+	}
 
 	return arp, nil
 }
