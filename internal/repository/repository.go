@@ -6,7 +6,7 @@ import (
 )
 
 type ContentRepository interface {
-	GetContentBySlug(id string) (*model.ContentDoc, error)
+	GetContentBySlug(slug string) (*model.ContentDoc, error)
 	GetContent(id string) (*model.ContentDoc, error)
 	AddContent(cnt *content.NewContentAttributes) (*model.ContentDoc, error)
 	EditContent(
