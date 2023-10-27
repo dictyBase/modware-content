@@ -5,6 +5,7 @@ import (
 
 	driver "github.com/arangodb/go-driver"
 	manager "github.com/dictyBase/arangomanager"
+	"github.com/dictyBase/go-genproto/dictybaseapis/content"
 	"github.com/dictyBase/modware-content/internal/model"
 	"github.com/dictyBase/modware-content/internal/repository"
 )
@@ -27,7 +28,9 @@ func NewContentRepo(
 	arp.sess = sess
 	arp.database = dbs
 	schemaOptions := &driver.CollectionSchemaOptions{}
-	schemaOptions.LoadRule(model.Schema())
+	if err := schemaOptions.LoadRule(model.Schema()); err != nil {
+		return arp, fmt.Errorf("error in loading schema %s", err)
+	}
 	contentCollection, err := dbs.FindOrCreateCollection(
 		collection,
 		&driver.CreateCollectionOptions{Schema: schemaOptions},
@@ -41,4 +44,30 @@ func NewContentRepo(
 	arp.content = contentCollection
 
 	return arp, nil
+}
+
+func (arp *arangorepository) GetContentBySlug(
+	id string,
+) (*model.ContentDoc, error) {
+	panic("not implemented") // TODO: Implement
+}
+
+func (arp *arangorepository) GetContent(id string) (*model.ContentDoc, error) {
+	panic("not implemented") // TODO: Implement
+}
+
+func (arp *arangorepository) AddContent(
+	cnt *content.NewContentAttributes,
+) (*model.ContentDoc, error) {
+	panic("not implemented") // TODO: Implement
+}
+
+func (arp *arangorepository) EditContent(
+	cnt *content.ExistingContentAttributes,
+) (*model.ContentDoc, error) {
+	panic("not implemented") // TODO: Implement
+}
+
+func (arp *arangorepository) DeleteContent(id string) error {
+	panic("not implemented") // TODO: Implement
 }
