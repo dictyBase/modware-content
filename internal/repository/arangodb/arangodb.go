@@ -76,7 +76,7 @@ func NewContentRepo(
 }
 
 func (arp *arangorepository) GetContentBySlug(
-	id string,
+	slug string,
 ) (*model.ContentDoc, error) {
 	panic("not implemented") // TODO: Implement
 }
