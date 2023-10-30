@@ -6,7 +6,7 @@ require (
 	github.com/dictyBase/aphgrpc v1.4.2
 	github.com/dictyBase/apihelpers v0.0.0-20180407012836-a3b4e4c94490
 	github.com/dictyBase/arangomanager v0.4.0
-	github.com/dictyBase/go-genproto v0.0.0-20231025200857-ea98d5043d59
+	github.com/dictyBase/go-genproto v0.0.0-20231030202356-522cb6f9976a
 	github.com/garyburd/redigo v1.4.0 // indirect
 	github.com/go-playground/validator/v10 v10.15.5
 	github.com/go-sql-driver/mysql v1.5.0 // indirect
