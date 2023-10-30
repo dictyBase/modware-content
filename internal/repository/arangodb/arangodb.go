@@ -168,7 +168,7 @@ func (arp *arangorepository) AddContent(
 	}
 	if err := res.Read(cntModel); err != nil {
 		return cntModel, fmt.Errorf(
-			"error in reading the model tos struct %s",
+			"error in reading the model to struct %s",
 			err,
 		)
 	}
@@ -177,7 +177,25 @@ func (arp *arangorepository) AddContent(
 }
 
 func (arp *arangorepository) EditContent(
-	cnt *content.ExistingContentAttributes,
+	cattr *content.ExistingContentAttributes,
 ) (*model.ContentDoc, error) {
-	panic("not implemented") // TODO: Implement
+	cntModel := &model.ContentDoc{}
+	res, err := arp.database.DoRun(
+		ContentUpdate,
+		map[string]interface{}{
+			"updated_by": cattr.UpdatedBy,
+			"content":    cattr.Content,
+		},
+	)
+	if err != nil {
+		return cntModel, fmt.Errorf("error in updating content %s", err)
+	}
+	if err := res.Read(cntModel); err != nil {
+		return cntModel, fmt.Errorf(
+			"error in reading the model to struct %s",
+			err,
+		)
+	}
+
+	return cntModel, nil
 }
