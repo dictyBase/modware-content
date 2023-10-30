@@ -149,9 +149,31 @@ func (arp *arangorepository) DeleteContent(cid string) error {
 }
 
 func (arp *arangorepository) AddContent(
-	cnt *content.NewContentAttributes,
+	cattr *content.NewContentAttributes,
 ) (*model.ContentDoc, error) {
-	panic("not implemented") // TODO: Implement
+	cntModel := &model.ContentDoc{}
+	res, err := arp.database.DoRun(
+		ContentInsert,
+		map[string]interface{}{
+			"name":       cattr.Name,
+			"namespace":  cattr.Namespace,
+			"created_by": cattr.CreatedBy,
+			"updated_by": cattr.CreatedBy,
+			"content":    cattr.Content,
+			"slug":       cattr.Slug,
+		},
+	)
+	if err != nil {
+		return cntModel, fmt.Errorf("error in creating new content %s", err)
+	}
+	if err := res.Read(cntModel); err != nil {
+		return cntModel, fmt.Errorf(
+			"error in reading the model tos struct %s",
+			err,
+		)
+	}
+
+	return cntModel, nil
 }
 
 func (arp *arangorepository) EditContent(
