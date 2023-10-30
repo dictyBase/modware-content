@@ -130,6 +130,24 @@ func (arp *arangorepository) GetContent(cid string) (*model.ContentDoc, error) {
 	return cntModel, nil
 }
 
+func (arp *arangorepository) DeleteContent(cid string) error {
+	cntCollection, err := arp.database.Collection(arp.content.Name())
+	if err != nil {
+		return fmt.Errorf("error in getting collection %s", err)
+	}
+	_, err = cntCollection.RemoveDocument(context.Background(), cid)
+	if err != nil {
+		errMsg := fmt.Sprintf("error in reading document %s", err)
+		if driver.IsNotFoundGeneral(err) {
+			errMsg = fmt.Sprintf("document with ID %s not found", cid)
+		}
+
+		return errors.New(errMsg)
+	}
+
+	return nil
+}
+
 func (arp *arangorepository) AddContent(
 	cnt *content.NewContentAttributes,
 ) (*model.ContentDoc, error) {
@@ -139,9 +157,5 @@ func (arp *arangorepository) AddContent(
 func (arp *arangorepository) EditContent(
 	cnt *content.ExistingContentAttributes,
 ) (*model.ContentDoc, error) {
-	panic("not implemented") // TODO: Implement
-}
-
-func (arp *arangorepository) DeleteContent(id string) error {
 	panic("not implemented") // TODO: Implement
 }
