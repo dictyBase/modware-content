@@ -2,6 +2,7 @@ package arangodb
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
 	driver "github.com/arangodb/go-driver"
@@ -116,7 +117,12 @@ func (arp *arangorepository) GetContent(cid string) (*model.ContentDoc, error) {
 	}
 	meta, err := cntCollection.ReadDocument(context.Background(), cid, cntModel)
 	if err != nil {
-		return cntModel, fmt.Errorf("error in reading document %s", err)
+		errMsg := fmt.Sprintf("error in reading document %s", err)
+		if driver.IsNotFoundGeneral(err) {
+			errMsg = fmt.Sprintf("document with ID %s not found", cid)
+		}
+
+		return cntModel, errors.New(errMsg)
 	}
 	cntModel.ID = meta.ID
 	cntModel.Key = meta.Key
