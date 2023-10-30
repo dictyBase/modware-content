@@ -7,10 +7,11 @@ import (
 
 type ContentRepository interface {
 	GetContentBySlug(slug string) (*model.ContentDoc, error)
-	GetContent(id string) (*model.ContentDoc, error)
+	GetContent(cid int64) (*model.ContentDoc, error)
 	AddContent(cnt *content.NewContentAttributes) (*model.ContentDoc, error)
 	EditContent(
+		cid int64,
 		cnt *content.ExistingContentAttributes,
 	) (*model.ContentDoc, error)
-	DeleteContent(id string) error
+	DeleteContent(cid int64) error
 }
