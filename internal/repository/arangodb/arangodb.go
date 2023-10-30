@@ -177,12 +177,14 @@ func (arp *arangorepository) AddContent(
 }
 
 func (arp *arangorepository) EditContent(
+	cid int64,
 	cattr *content.ExistingContentAttributes,
 ) (*model.ContentDoc, error) {
 	cntModel := &model.ContentDoc{}
 	res, err := arp.database.DoRun(
 		ContentUpdate,
 		map[string]interface{}{
+			"key":        cid,
 			"updated_by": cattr.UpdatedBy,
 			"content":    cattr.Content,
 		},
