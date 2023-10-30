@@ -1,6 +1,7 @@
 package arangodb
 
 import (
+	"context"
 	"fmt"
 
 	driver "github.com/arangodb/go-driver"
@@ -107,8 +108,20 @@ func (arp *arangorepository) GetContentBySlug(
 	return cntModel, nil
 }
 
-func (arp *arangorepository) GetContent(id string) (*model.ContentDoc, error) {
-	panic("not implemented") // TODO: Implement
+func (arp *arangorepository) GetContent(cid string) (*model.ContentDoc, error) {
+	cntModel := &model.ContentDoc{}
+	cntCollection, err := arp.database.Collection(arp.content.Name())
+	if err != nil {
+		return cntModel, fmt.Errorf("error in getting collection %s", err)
+	}
+	meta, err := cntCollection.ReadDocument(context.Background(), cid, cntModel)
+	if err != nil {
+		return cntModel, fmt.Errorf("error in reading document %s", err)
+	}
+	cntModel.ID = meta.ID
+	cntModel.Key = meta.Key
+
+	return cntModel, nil
 }
 
 func (arp *arangorepository) AddContent(
