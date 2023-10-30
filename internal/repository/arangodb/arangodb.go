@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"strconv"
 
 	driver "github.com/arangodb/go-driver"
 	manager "github.com/dictyBase/arangomanager"
@@ -109,17 +110,21 @@ func (arp *arangorepository) GetContentBySlug(
 	return cntModel, nil
 }
 
-func (arp *arangorepository) GetContent(cid string) (*model.ContentDoc, error) {
+func (arp *arangorepository) GetContent(cid int64) (*model.ContentDoc, error) {
 	cntModel := &model.ContentDoc{}
 	cntCollection, err := arp.database.Collection(arp.content.Name())
 	if err != nil {
 		return cntModel, fmt.Errorf("error in getting collection %s", err)
 	}
-	meta, err := cntCollection.ReadDocument(context.Background(), cid, cntModel)
+	meta, err := cntCollection.ReadDocument(
+		context.Background(),
+		strconv.Itoa(int(cid)),
+		cntModel,
+	)
 	if err != nil {
 		errMsg := fmt.Sprintf("error in reading document %s", err)
 		if driver.IsNotFoundGeneral(err) {
-			errMsg = fmt.Sprintf("document with ID %s not found", cid)
+			errMsg = fmt.Sprintf("document with ID %d not found", cid)
 		}
 
 		return cntModel, errors.New(errMsg)
@@ -130,16 +135,16 @@ func (arp *arangorepository) GetContent(cid string) (*model.ContentDoc, error) {
 	return cntModel, nil
 }
 
-func (arp *arangorepository) DeleteContent(cid string) error {
+func (arp *arangorepository) DeleteContent(cid int64) error {
 	cntCollection, err := arp.database.Collection(arp.content.Name())
 	if err != nil {
 		return fmt.Errorf("error in getting collection %s", err)
 	}
-	_, err = cntCollection.RemoveDocument(context.Background(), cid)
+	_, err = cntCollection.RemoveDocument(context.Background(), strconv.Itoa(int(cid)))
 	if err != nil {
 		errMsg := fmt.Sprintf("error in reading document %s", err)
 		if driver.IsNotFoundGeneral(err) {
-			errMsg = fmt.Sprintf("document with ID %s not found", cid)
+			errMsg = fmt.Sprintf("document with ID %d not found", cid)
 		}
 
 		return errors.New(errMsg)
