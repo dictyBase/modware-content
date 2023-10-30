@@ -657,8 +657,8 @@ github.com/dictyBase/apihelpers v0.0.0-20180407012836-a3b4e4c94490 h1:QQq5zIMWfd
 github.com/dictyBase/apihelpers v0.0.0-20180407012836-a3b4e4c94490/go.mod h1:WMCcrIvQoc3UBfA643QFDQufK2a+7mYGgkGxVFWfJus=
 github.com/dictyBase/arangomanager v0.4.0 h1:+HgmadUY0qXFMLfZocktynbERkX/FgWzC3vd/MMebnU=
 github.com/dictyBase/arangomanager v0.4.0/go.mod h1:SmElsQJN3EbTjfYCkjS7/uyUkNVwaO2qJB9Mqrs0ND8=
-github.com/dictyBase/go-genproto v0.0.0-20231025200857-ea98d5043d59 h1:yfRIDf8GA0eE9pZjP55Xs2uRY3EjG5UTIM7UrUw8zaY=
-github.com/dictyBase/go-genproto v0.0.0-20231025200857-ea98d5043d59/go.mod h1:KY6iUqXl1lLq81WTW9u5DfZE58xM61PsGLSLwwtePlk=
+github.com/dictyBase/go-genproto v0.0.0-20231030202356-522cb6f9976a h1:V0xN+gehQLCJrqFPI1nNd8wCIi6Z0ZQgmoZ6dmkPlV0=
+github.com/dictyBase/go-genproto v0.0.0-20231030202356-522cb6f9976a/go.mod h1:KY6iUqXl1lLq81WTW9u5DfZE58xM61PsGLSLwwtePlk=
 github.com/docopt/docopt-go v0.0.0-20180111231733-ee0de3bc6815/go.mod h1:WwZ+bS3ebgob9U8Nd0kOddGdZWjyMGR8Wziv+TBNwSE=
 github.com/dustin/go-humanize v1.0.0/go.mod h1:HtrtbFcZ19U5GC7JDqmcUSB87Iq5E25KnS6fMYU6eOk=
 github.com/emirpasic/gods v1.18.1/go.mod h1:8tpGGwCnJ5H4r6BWwaV6OrWmMoPhUl5jm/FMNAnJvWQ=
