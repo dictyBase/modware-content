@@ -1,10 +1,14 @@
 package model
 
 import (
+	"regexp"
+	"strings"
 	"time"
 
 	driver "github.com/arangodb/go-driver"
 )
+
+var noncharReg = regexp.MustCompile("[^a-z0-9]+")
 
 type ContentDoc struct {
 	driver.DocumentMeta
@@ -42,4 +46,11 @@ func Schema() []byte {
 		   ]
 		}
 	`)
+}
+
+func Slugify(name string) string {
+	return strings.Trim(
+		noncharReg.ReplaceAllString(strings.ToLower(name), "-"),
+		"-",
+	)
 }
