@@ -163,12 +163,13 @@ func (arp *arangorepository) AddContent(
 	res, err := arp.database.DoRun(
 		ContentInsert,
 		map[string]interface{}{
-			"name":       cattr.Name,
-			"namespace":  cattr.Namespace,
-			"created_by": cattr.CreatedBy,
-			"updated_by": cattr.CreatedBy,
-			"content":    cattr.Content,
-			"slug":       cattr.Slug,
+			"name":                cattr.Name,
+			"namespace":           cattr.Namespace,
+			"created_by":          cattr.CreatedBy,
+			"updated_by":          cattr.CreatedBy,
+			"content":             cattr.Content,
+			"slug":                cattr.Slug,
+			"@content_collection": arp.content.Name(),
 		},
 	)
 	if err != nil {
