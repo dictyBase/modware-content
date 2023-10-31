@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"testing"
+	"time"
 
 	manager "github.com/dictyBase/arangomanager"
 	"github.com/dictyBase/arangomanager/testarango"
@@ -19,7 +20,7 @@ type ContentJSON struct {
 }
 
 func NewStoreContent(name, namespace string) *content.NewContentAttributes {
-	cdata, _ := json.Marshal(ContentJSON{
+	cdata, _ := json.Marshal(&ContentJSON{
 		Paragraph: "paragraph",
 		Text:      "text",
 	})
@@ -31,6 +32,16 @@ func NewStoreContent(name, namespace string) *content.NewContentAttributes {
 		Content:   string(cdata),
 		Slug:      model.Slugify(fmt.Sprintf("%s %s", name, namespace)),
 	}
+}
+
+func ContentFromStore(jsctnt string) (*ContentJSON, error) {
+	ctnt := &ContentJSON{}
+	err := json.Unmarshal([]byte(jsctnt), ctnt)
+	if err != nil {
+		return ctnt, fmt.Errorf("error in unmarshing json %s", err)
+	}
+
+	return ctnt, nil
 }
 
 func setUp(t *testing.T) (*require.Assertions, repository.ContentRepository) {
@@ -72,4 +83,24 @@ func TestAddContent(t *testing.T) {
 	assert.Equal(nct.Name, "catalog", "name should match")
 	assert.Equal(nct.Namespace, "dsc", "namespace should match")
 	assert.Equal(nct.Slug, "catalog-dsc", "slug should match")
+	assert.Equal(
+		nct.CreatedBy,
+		"content@content.org",
+		"should match created_by",
+	)
+	assert.True(
+		nct.CreatedOn.Equal(nct.UpdatedOn),
+		"created_on should match updated_on",
+	)
+	assert.True(
+		nct.CreatedOn.Before(time.Now()),
+		"should have created before the current time",
+	)
+	ctnt, err := ContentFromStore(nct.Content)
+	assert.NoError(err, "should not have any error with json unmarshaling")
+	assert.Equal(
+		ctnt,
+		&ContentJSON{Paragraph: "paragraph", Text: "text"},
+		"should match the content",
+	)
 }
