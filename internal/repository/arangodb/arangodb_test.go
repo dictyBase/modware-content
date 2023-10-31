@@ -1,13 +1,37 @@
 package arangodb
 
 import (
+	"encoding/json"
+	"fmt"
 	"testing"
 
 	manager "github.com/dictyBase/arangomanager"
 	"github.com/dictyBase/arangomanager/testarango"
+	"github.com/dictyBase/go-genproto/dictybaseapis/content"
+	"github.com/dictyBase/modware-content/internal/model"
 	"github.com/dictyBase/modware-content/internal/repository"
 	"github.com/stretchr/testify/require"
 )
+
+type ContentJSON struct {
+	Paragraph string `json:"paragraph"`
+	Text      string `json:"text"`
+}
+
+func NewStoreContent(name, namespace string) *content.NewContentAttributes {
+	cdata, _ := json.Marshal(ContentJSON{
+		Paragraph: "paragraph",
+		Text:      "text",
+	})
+
+	return &content.NewContentAttributes{
+		Name:      name,
+		Namespace: namespace,
+		CreatedBy: "content@content.org",
+		Content:   string(cdata),
+		Slug:      model.Slugify(fmt.Sprintf("%s %s", name, namespace)),
+	}
+}
 
 func setUp(t *testing.T) (*require.Assertions, repository.ContentRepository) {
 	t.Helper()
@@ -37,4 +61,15 @@ func setUp(t *testing.T) (*require.Assertions, repository.ContentRepository) {
 
 func tearDown(repo repository.ContentRepository) {
 	_ = repo.Dbh().Drop()
+}
+
+func TestAddContent(t *testing.T) {
+	t.Parallel()
+	assert, repo := setUp(t)
+	defer tearDown(repo)
+	nct, err := repo.AddContent(NewStoreContent("catalog", "dsc"))
+	assert.NoErrorf(err, "expect no error from creating content %s", err)
+	assert.Equal(nct.Name, "catalog", "name should match")
+	assert.Equal(nct.Namespace, "dsc", "namespace should match")
+	assert.Equal(nct.Slug, "catalog-dsc", "slug should match")
 }
