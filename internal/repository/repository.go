@@ -1,6 +1,7 @@
 package repository
 
 import (
+	manager "github.com/dictyBase/arangomanager"
 	"github.com/dictyBase/go-genproto/dictybaseapis/content"
 	"github.com/dictyBase/modware-content/internal/model"
 )
@@ -14,4 +15,5 @@ type ContentRepository interface {
 		cnt *content.ExistingContentAttributes,
 	) (*model.ContentDoc, error)
 	DeleteContent(cid int64) error
+	Dbh() *manager.Database
 }
