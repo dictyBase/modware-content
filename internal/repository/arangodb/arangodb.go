@@ -140,7 +140,10 @@ func (arp *arangorepository) DeleteContent(cid int64) error {
 	if err != nil {
 		return fmt.Errorf("error in getting collection %s", err)
 	}
-	_, err = cntCollection.RemoveDocument(context.Background(), strconv.Itoa(int(cid)))
+	_, err = cntCollection.RemoveDocument(
+		context.Background(),
+		strconv.Itoa(int(cid)),
+	)
 	if err != nil {
 		errMsg := fmt.Sprintf("error in reading document %s", err)
 		if driver.IsNotFoundGeneral(err) {
@@ -205,4 +208,8 @@ func (arp *arangorepository) EditContent(
 	}
 
 	return cntModel, nil
+}
+
+func (arp *arangorepository) Dbh() *manager.Database {
+	return arp.database
 }
