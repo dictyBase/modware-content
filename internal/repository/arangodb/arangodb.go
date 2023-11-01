@@ -122,12 +122,13 @@ func (arp *arangorepository) GetContent(cid int64) (*model.ContentDoc, error) {
 		cntModel,
 	)
 	if err != nil {
-		errMsg := fmt.Sprintf("error in reading document %s", err)
 		if driver.IsNotFoundGeneral(err) {
-			errMsg = fmt.Sprintf("document with ID %d not found", cid)
+			cntModel.NotFound = true
+
+			return cntModel, nil
 		}
 
-		return cntModel, errors.New(errMsg)
+		return cntModel, fmt.Errorf("error in reading document %s", err)
 	}
 	cntModel.ID = meta.ID
 	cntModel.Key = meta.Key
