@@ -3,6 +3,7 @@ package arangodb
 import (
 	"encoding/json"
 	"fmt"
+	"strconv"
 	"testing"
 	"time"
 
@@ -113,6 +114,10 @@ func TestGetContentBySlug(t *testing.T) {
 	assert.NoErrorf(err, "expect no error from creating content %s", err)
 	sct, err := repo.GetContentBySlug(nct.Slug)
 	assert.NoErrorf(err, "expect no error from getting content by slug %s", err)
+func testContentProperties(
+	assert *require.Assertions,
+	sct, nct *model.ContentDoc,
+) {
 	assert.Equal(sct.Name, nct.Name, "name should match")
 	assert.Equal(sct.Namespace, nct.Namespace, "namespace should match")
 	assert.Equal(sct.Slug, nct.Slug, "slug should match")
