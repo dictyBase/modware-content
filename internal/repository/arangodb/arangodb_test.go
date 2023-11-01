@@ -157,6 +157,46 @@ func TestDeleteContent(t *testing.T) {
 	assert.True(ecnt.NotFound, "expect no record to be found")
 }
 
+func TestEditContent(t *testing.T) {
+	t.Parallel()
+	assert, repo := setUp(t)
+	defer tearDown(repo)
+	nct, err := repo.AddContent(NewStoreContent("catalog", "dsc"))
+	assert.NoErrorf(err, "expect no error from creating content %s", err)
+	key, err := strconv.ParseInt(nct.Key, 10, 64)
+	assert.NoErrorf(
+		err,
+		"expect no error from string to int64 conversion of key %s",
+		err,
+	)
+	cdata, _ := json.Marshal(&ContentJSON{
+		Paragraph: "clompous",
+		Text:      "jack",
+	})
+	sct, err := repo.EditContent(
+		key,
+		&content.ExistingContentAttributes{
+			UpdatedBy: "packer@packer.com",
+			Content:   string(cdata),
+		},
+	)
+	assert.NoErrorf(err, "expect no error from updating content %s", err)
+	assert.Equal(sct.UpdatedBy, "packer@packer.com", "should match updated by")
+	assert.Equal([]byte(sct.Content), cdata, "should match updated content")
+	assert.True(
+		sct.UpdatedOn.After(sct.CreatedOn),
+		"should have correct updated timestamp",
+	)
+	assert.Equal(sct.Name, nct.Name, "name should match")
+	assert.Equal(sct.Namespace, nct.Namespace, "namespace should match")
+	assert.Equal(sct.Slug, nct.Slug, "slug should match")
+	assert.Equal(
+		sct.CreatedBy,
+		nct.CreatedBy,
+		"should match created_by",
+	)
+}
+
 func testContentProperties(
 	assert *require.Assertions,
 	sct, nct *model.ContentDoc,
