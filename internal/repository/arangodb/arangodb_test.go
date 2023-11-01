@@ -104,3 +104,30 @@ func TestAddContent(t *testing.T) {
 		"should match the content",
 	)
 }
+
+func TestGetContentBySlug(t *testing.T) {
+	t.Parallel()
+	assert, repo := setUp(t)
+	defer tearDown(repo)
+	nct, err := repo.AddContent(NewStoreContent("catalog", "dsc"))
+	assert.NoErrorf(err, "expect no error from creating content %s", err)
+	sct, err := repo.GetContentBySlug(nct.Slug)
+	assert.NoErrorf(err, "expect no error from getting content by slug %s", err)
+	assert.Equal(sct.Name, nct.Name, "name should match")
+	assert.Equal(sct.Namespace, nct.Namespace, "namespace should match")
+	assert.Equal(sct.Slug, nct.Slug, "slug should match")
+	assert.Equal(
+		sct.CreatedBy,
+		nct.CreatedBy,
+		"should match created_by",
+	)
+	assert.True(
+		sct.CreatedOn.Equal(nct.CreatedOn),
+		"created_on should match",
+	)
+	assert.True(
+		sct.UpdatedOn.Equal(nct.UpdatedOn),
+		"created_on should match",
+	)
+	assert.Equal(sct.Content, nct.Content, "should match raw conent")
+}
