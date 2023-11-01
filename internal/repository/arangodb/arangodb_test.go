@@ -134,6 +134,29 @@ func TestGetContent(t *testing.T) {
 	testContentProperties(assert, sct, nct)
 }
 
+func TestDeleteContent(t *testing.T) {
+	t.Parallel()
+	assert, repo := setUp(t)
+	defer tearDown(repo)
+	nct, err := repo.AddContent(NewStoreContent("catalog", "dsc"))
+	assert.NoErrorf(err, "expect no error from creating content %s", err)
+	key, err := strconv.ParseInt(nct.Key, 10, 64)
+	assert.NoErrorf(
+		err,
+		"expect no error from string to int64 conversion of key %s",
+		err,
+	)
+	err = repo.DeleteContent(key)
+	assert.NoErrorf(
+		err,
+		"expect no error from deleting content by slug %s",
+		err,
+	)
+	ecnt, err := repo.GetContent(key)
+	assert.NoErrorf(err, "expect no error from getting content by slug %s", err)
+	assert.True(ecnt.NotFound, "expect no record to be found")
+}
+
 func testContentProperties(
 	assert *require.Assertions,
 	sct, nct *model.ContentDoc,
