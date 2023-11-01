@@ -194,9 +194,10 @@ func (arp *arangorepository) EditContent(
 	res, err := arp.database.DoRun(
 		ContentUpdate,
 		map[string]interface{}{
-			"key":        cid,
-			"updated_by": cattr.UpdatedBy,
-			"content":    cattr.Content,
+			"key":                 strconv.FormatInt(cid, 10),
+			"updated_by":          cattr.UpdatedBy,
+			"content":             cattr.Content,
+			"@content_collection": arp.content.Name(),
 		},
 	)
 	if err != nil {
