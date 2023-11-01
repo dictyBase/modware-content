@@ -114,6 +114,26 @@ func TestGetContentBySlug(t *testing.T) {
 	assert.NoErrorf(err, "expect no error from creating content %s", err)
 	sct, err := repo.GetContentBySlug(nct.Slug)
 	assert.NoErrorf(err, "expect no error from getting content by slug %s", err)
+	testContentProperties(assert, sct, nct)
+}
+
+func TestGetContent(t *testing.T) {
+	t.Parallel()
+	assert, repo := setUp(t)
+	defer tearDown(repo)
+	nct, err := repo.AddContent(NewStoreContent("catalog", "dsc"))
+	assert.NoErrorf(err, "expect no error from creating content %s", err)
+	key, err := strconv.ParseInt(nct.Key, 10, 64)
+	assert.NoErrorf(
+		err,
+		"expect no error from string to int64 conversion of key %s",
+		err,
+	)
+	sct, err := repo.GetContent(key)
+	assert.NoErrorf(err, "expect no error from getting content by slug %s", err)
+	testContentProperties(assert, sct, nct)
+}
+
 func testContentProperties(
 	assert *require.Assertions,
 	sct, nct *model.ContentDoc,
