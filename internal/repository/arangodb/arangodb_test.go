@@ -197,6 +197,23 @@ func TestEditContent(t *testing.T) {
 	)
 }
 
+func TestSchemaValidation(t *testing.T) {
+	t.Parallel()
+	assert, repo := setUp(t)
+	defer tearDown(repo)
+	_, err := repo.AddContent(NewStoreContent("catalog", "dsc"))
+	assert.NoErrorf(err, "expect no error from creating content %s", err)
+	_, err = repo.AddContent(NewStoreContent("catalog", "dsc"))
+	assert.Error(err, "expect schema validation error for duplicate slug")
+	ncnt := NewStoreContent("price", "dsc")
+	ncnt.CreatedBy = "yadayadayada"
+	_, err = repo.AddContent(ncnt)
+	assert.Error(
+		err,
+		"expect schema validation error for created by field does not have an email address",
+	)
+}
+
 func testContentProperties(
 	assert *require.Assertions,
 	sct, nct *model.ContentDoc,
