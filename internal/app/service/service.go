@@ -4,9 +4,10 @@ import (
 	"context"
 	"fmt"
 	"regexp"
+	"strconv"
 	"strings"
 
-	"github.com/dictyBase/apihelpers/aphgrpc"
+	"github.com/dictyBase/aphgrpc"
 	"github.com/dictyBase/go-genproto/dictybaseapis/api/jsonapi"
 	"github.com/dictyBase/go-genproto/dictybaseapis/content"
 	"github.com/dictyBase/modware-content/internal/message"
@@ -34,9 +35,9 @@ type ContentService struct {
 // ServiceParams are the attributes that are required for creating new ContentService.
 type Params struct {
 	Repository repository.ContentRepository `validate:"required"`
-	Publisher  message.Publisher         `validate:"required"`
-	Options    []aphgrpc.Option          `validate:"required"`
-	Group      string                    `validate:"required"`
+	Publisher  message.Publisher            `validate:"required"`
+	Options    []aphgrpc.Option             `validate:"required"`
+	Group      string                       `validate:"required"`
 }
 
 func NewContentService(srvP *Params) (*ContentService, error) {
@@ -68,11 +69,37 @@ func (s *ContentService) Healthz(
 	return &empty.Empty{}, nil
 }
 
-func (s *ContentService) GetContentBySlug(
+func (srv *ContentService) GetContentBySlug(
 	ctx context.Context,
-	r *content.ContentRequest,
+	rdr *content.ContentRequest,
 ) (*content.Content, error) {
-	return &content.Content{}, nil
+	ctnt := &content.Content{}
+	if err := rdr.Validate(); err != nil {
+		return ctnt, aphgrpc.HandleInvalidParamError(ctx, err)
+	}
+	mcont, err := srv.repo.GetContentBySlug(rdr.Slug)
+	if err != nil {
+		return ctnt, aphgrpc.HandleGetError(ctx, err)
+	}
+	if mcont.NotFound {
+		return ctnt, aphgrpc.HandleNotFoundError(ctx, err)
+	}
+	id, _ := strconv.ParseInt(mcont.Key, 10, 64)
+	return &content.Content{
+		Data: &content.ContentData{
+			Type: srv.GetResourceName(),
+			Id:   id,
+			Attributes: &content.ContentAttributes{
+				Name:      mcont.Name,
+				Namespace: mcont.Namespace,
+				Slug:      mcont.Slug,
+				CreatedBy: mcont.CreatedBy,
+				UpdatedBy: mcont.UpdatedBy,
+				CreatedAt: aphgrpc.TimestampProto(mcont.CreatedOn),
+				UpdatedAt: aphgrpc.TimestampProto(mcont.UpdatedOn),
+				Content:   mcont.Content,
+			},
+		}}, nil
 }
 
 func (s *ContentService) GetContent(
