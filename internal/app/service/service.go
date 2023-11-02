@@ -148,7 +148,17 @@ func (srv *ContentService) UpdateContent(
 	ctx context.Context,
 	req *content.UpdateContentRequest,
 ) (*content.Content, error) {
-	return &content.Content{}, nil
+	ctnt := &content.Content{}
+	if err := req.Validate(); err != nil {
+		return ctnt, aphgrpc.HandleInvalidParamError(ctx, err)
+	}
+	mcont, err := srv.repo.EditContent(req.Id, req.Data.Attributes)
+	if err != nil {
+		return ctnt, aphgrpc.HandleGetError(ctx, err)
+	}
+	cid, _ := strconv.ParseInt(mcont.Key, 10, 64)
+
+	return srv.buildContent(cid, mcont), nil
 }
 
 func (srv *ContentService) DeleteContent(
