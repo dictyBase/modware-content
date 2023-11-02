@@ -3,20 +3,17 @@ package service
 import (
 	"context"
 	"fmt"
-	"regexp"
 	"strconv"
-	"strings"
 
 	"github.com/dictyBase/aphgrpc"
 	"github.com/dictyBase/go-genproto/dictybaseapis/api/jsonapi"
 	"github.com/dictyBase/go-genproto/dictybaseapis/content"
 	"github.com/dictyBase/modware-content/internal/message"
+	"github.com/dictyBase/modware-content/internal/model"
 	"github.com/dictyBase/modware-content/internal/repository"
 	"github.com/go-playground/validator/v10"
 	"github.com/golang/protobuf/ptypes/empty"
 )
-
-var noncharReg = regexp.MustCompile("[^a-z0-9]+")
 
 func defaultOptions() *aphgrpc.ServiceOptions {
 	return &aphgrpc.ServiceOptions{
@@ -64,7 +61,7 @@ func NewContentService(srvP *Params) (*ContentService, error) {
 
 func (s *ContentService) Healthz(
 	ctx context.Context,
-	r *jsonapi.HealthzIdRequest,
+	rdr *jsonapi.HealthzIdRequest,
 ) (*empty.Empty, error) {
 	return &empty.Empty{}, nil
 }
@@ -84,11 +81,39 @@ func (srv *ContentService) GetContentBySlug(
 	if mcont.NotFound {
 		return ctnt, aphgrpc.HandleNotFoundError(ctx, err)
 	}
-	id, _ := strconv.ParseInt(mcont.Key, 10, 64)
+	cid, _ := strconv.ParseInt(mcont.Key, 10, 64)
+
+	return srv.buildContent(cid, mcont), nil
+}
+
+func (srv *ContentService) GetContent(
+	ctx context.Context,
+	rdr *content.ContentIdRequest,
+) (*content.Content, error) {
+	ctnt := &content.Content{}
+	if err := rdr.Validate(); err != nil {
+		return ctnt, aphgrpc.HandleInvalidParamError(ctx, err)
+	}
+	mcont, err := srv.repo.GetContent(rdr.Id)
+	if err != nil {
+		return ctnt, aphgrpc.HandleGetError(ctx, err)
+	}
+	if mcont.NotFound {
+		return ctnt, aphgrpc.HandleNotFoundError(ctx, err)
+	}
+	cid, _ := strconv.ParseInt(mcont.Key, 10, 64)
+
+	return srv.buildContent(cid, mcont), nil
+}
+
+func (srv *ContentService) buildContent(
+	cid int64,
+	mcont *model.ContentDoc,
+) *content.Content {
 	return &content.Content{
 		Data: &content.ContentData{
 			Type: srv.GetResourceName(),
-			Id:   id,
+			Id:   cid,
 			Attributes: &content.ContentAttributes{
 				Name:      mcont.Name,
 				Namespace: mcont.Namespace,
@@ -99,14 +124,7 @@ func (srv *ContentService) GetContentBySlug(
 				UpdatedAt: aphgrpc.TimestampProto(mcont.UpdatedOn),
 				Content:   mcont.Content,
 			},
-		}}, nil
-}
-
-func (s *ContentService) GetContent(
-	ctx context.Context,
-	r *content.ContentIdRequest,
-) (*content.Content, error) {
-	return &content.Content{}, nil
+		}}
 }
 
 func (s *ContentService) StoreContent(
@@ -121,49 +139,11 @@ func (s *ContentService) UpdateContent(
 	req *content.UpdateContentRequest,
 ) (*content.Content, error) {
 	return &content.Content{}, nil
-
 }
 
 func (s *ContentService) DeleteContent(
 	ctx context.Context,
 	req *content.ContentIdRequest,
 ) (*empty.Empty, error) {
-	return &content.Content{}, nil
-}
-
-// -- Functions that builds up the various parts of the final content resource
-// objects.
-func (s *ContentService) buildResourceData(
-	ctx context.Context,
-	idn int64,
-	attr *content.ContentAttributes,
-) *content.ContentData {
-	return &content.ContentData{
-		Attributes: attr,
-		Id:         idn,
-		Type:       s.GetResourceName(),
-		Links: &jsonapi.Links{
-			Self: s.GenResourceSelfLink(ctx, idn),
-		},
-	}
-}
-
-func (s *ContentService) buildResource(
-	ctx context.Context,
-	idn int64,
-	attr *content.ContentAttributes,
-) *content.Content {
-	return &content.Content{
-		Data: s.buildResourceData(ctx, idn, attr),
-		Links: &jsonapi.Links{
-			Self: s.GenResourceSelfLink(ctx, idn),
-		},
-	}
-}
-
-func slug(s string) string {
-	return strings.Trim(
-		noncharReg.ReplaceAllString(strings.ToLower(s), "-"),
-		"-",
-	)
+	return &empty.Empty{}, nil
 }
