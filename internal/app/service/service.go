@@ -59,7 +59,7 @@ func NewContentService(srvP *Params) (*ContentService, error) {
 	}, nil
 }
 
-func (s *ContentService) Healthz(
+func (srv *ContentService) Healthz(
 	ctx context.Context,
 	rdr *jsonapi.HealthzIdRequest,
 ) (*empty.Empty, error) {
@@ -127,21 +127,31 @@ func (srv *ContentService) buildContent(
 		}}
 }
 
-func (s *ContentService) StoreContent(
+func (srv *ContentService) StoreContent(
 	ctx context.Context,
 	req *content.StoreContentRequest,
 ) (*content.Content, error) {
-	return &content.Content{}, nil
+	ctnt := &content.Content{}
+	if err := req.Validate(); err != nil {
+		return ctnt, aphgrpc.HandleInvalidParamError(ctx, err)
+	}
+	mcont, err := srv.repo.AddContent(req.Data.Attributes)
+	if err != nil {
+		return ctnt, aphgrpc.HandleGetError(ctx, err)
+	}
+	cid, _ := strconv.ParseInt(mcont.Key, 10, 64)
+
+	return srv.buildContent(cid, mcont), nil
 }
 
-func (s *ContentService) UpdateContent(
+func (srv *ContentService) UpdateContent(
 	ctx context.Context,
 	req *content.UpdateContentRequest,
 ) (*content.Content, error) {
 	return &content.Content{}, nil
 }
 
-func (s *ContentService) DeleteContent(
+func (srv *ContentService) DeleteContent(
 	ctx context.Context,
 	req *content.ContentIdRequest,
 ) (*empty.Empty, error) {
