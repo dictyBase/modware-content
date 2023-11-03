@@ -165,5 +165,13 @@ func (srv *ContentService) DeleteContent(
 	ctx context.Context,
 	req *content.ContentIdRequest,
 ) (*empty.Empty, error) {
+	if err := req.Validate(); err != nil {
+		return &empty.Empty{}, aphgrpc.HandleInvalidParamError(ctx, err)
+	}
+	err := srv.repo.DeleteContent(req.Id)
+	if err != nil {
+		return &empty.Empty{}, aphgrpc.HandleGetError(ctx, err)
+	}
+
 	return &empty.Empty{}, nil
 }
