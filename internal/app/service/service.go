@@ -140,8 +140,11 @@ func (srv *ContentService) StoreContent(
 		return ctnt, aphgrpc.HandleGetError(ctx, err)
 	}
 	cid, _ := strconv.ParseInt(mcont.Key, 10, 64)
+	ctnt = srv.buildContent(cid, mcont)
+	//nolint:errcheck
+	srv.publisher.Publish(srv.Topics["contentCreate"], ctnt)
 
-	return srv.buildContent(cid, mcont), nil
+	return ctnt, nil
 }
 
 func (srv *ContentService) UpdateContent(
@@ -157,8 +160,11 @@ func (srv *ContentService) UpdateContent(
 		return ctnt, aphgrpc.HandleGetError(ctx, err)
 	}
 	cid, _ := strconv.ParseInt(mcont.Key, 10, 64)
+	ctnt = srv.buildContent(cid, mcont)
+	//nolint:errcheck
+	srv.publisher.Publish(srv.Topics["contentUpdate"], ctnt)
 
-	return srv.buildContent(cid, mcont), nil
+	return ctnt, nil
 }
 
 func (srv *ContentService) DeleteContent(
