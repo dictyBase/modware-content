@@ -2,7 +2,6 @@ package arangodb
 
 import (
 	"encoding/json"
-	"fmt"
 	"strconv"
 	"testing"
 	"time"
@@ -12,38 +11,9 @@ import (
 	"github.com/dictyBase/go-genproto/dictybaseapis/content"
 	"github.com/dictyBase/modware-content/internal/model"
 	"github.com/dictyBase/modware-content/internal/repository"
+	"github.com/dictyBase/modware-content/internal/testutils"
 	"github.com/stretchr/testify/require"
 )
-
-type ContentJSON struct {
-	Paragraph string `json:"paragraph"`
-	Text      string `json:"text"`
-}
-
-func NewStoreContent(name, namespace string) *content.NewContentAttributes {
-	cdata, _ := json.Marshal(&ContentJSON{
-		Paragraph: "paragraph",
-		Text:      "text",
-	})
-
-	return &content.NewContentAttributes{
-		Name:      name,
-		Namespace: namespace,
-		CreatedBy: "content@content.org",
-		Content:   string(cdata),
-		Slug:      model.Slugify(fmt.Sprintf("%s %s", name, namespace)),
-	}
-}
-
-func ContentFromStore(jsctnt string) (*ContentJSON, error) {
-	ctnt := &ContentJSON{}
-	err := json.Unmarshal([]byte(jsctnt), ctnt)
-	if err != nil {
-		return ctnt, fmt.Errorf("error in unmarshing json %s", err)
-	}
-
-	return ctnt, nil
-}
 
 func setUp(t *testing.T) (*require.Assertions, repository.ContentRepository) {
 	t.Helper()
@@ -79,7 +49,7 @@ func TestAddContent(t *testing.T) {
 	t.Parallel()
 	assert, repo := setUp(t)
 	defer tearDown(repo)
-	nct, err := repo.AddContent(NewStoreContent("catalog", "dsc"))
+	nct, err := repo.AddContent(testutils.NewStoreContent("catalog", "dsc"))
 	assert.NoErrorf(err, "expect no error from creating content %s", err)
 	assert.Equal(nct.Name, "catalog", "name should match")
 	assert.Equal(nct.Namespace, "dsc", "namespace should match")
@@ -97,11 +67,11 @@ func TestAddContent(t *testing.T) {
 		nct.CreatedOn.Before(time.Now()),
 		"should have created before the current time",
 	)
-	ctnt, err := ContentFromStore(nct.Content)
+	ctnt, err := testutils.ContentFromStore(nct.Content)
 	assert.NoError(err, "should not have any error with json unmarshaling")
 	assert.Equal(
 		ctnt,
-		&ContentJSON{Paragraph: "paragraph", Text: "text"},
+		&testutils.ContentJSON{Paragraph: "paragraph", Text: "text"},
 		"should match the content",
 	)
 }
@@ -110,7 +80,7 @@ func TestGetContentBySlug(t *testing.T) {
 	t.Parallel()
 	assert, repo := setUp(t)
 	defer tearDown(repo)
-	nct, err := repo.AddContent(NewStoreContent("catalog", "dsc"))
+	nct, err := repo.AddContent(testutils.NewStoreContent("catalog", "dsc"))
 	assert.NoErrorf(err, "expect no error from creating content %s", err)
 	sct, err := repo.GetContentBySlug(nct.Slug)
 	assert.NoErrorf(err, "expect no error from getting content by slug %s", err)
@@ -121,7 +91,7 @@ func TestGetContent(t *testing.T) {
 	t.Parallel()
 	assert, repo := setUp(t)
 	defer tearDown(repo)
-	nct, err := repo.AddContent(NewStoreContent("catalog", "dsc"))
+	nct, err := repo.AddContent(testutils.NewStoreContent("catalog", "dsc"))
 	assert.NoErrorf(err, "expect no error from creating content %s", err)
 	key, err := strconv.ParseInt(nct.Key, 10, 64)
 	assert.NoErrorf(
@@ -138,7 +108,7 @@ func TestDeleteContent(t *testing.T) {
 	t.Parallel()
 	assert, repo := setUp(t)
 	defer tearDown(repo)
-	nct, err := repo.AddContent(NewStoreContent("catalog", "dsc"))
+	nct, err := repo.AddContent(testutils.NewStoreContent("catalog", "dsc"))
 	assert.NoErrorf(err, "expect no error from creating content %s", err)
 	key, err := strconv.ParseInt(nct.Key, 10, 64)
 	assert.NoErrorf(
@@ -161,7 +131,7 @@ func TestEditContent(t *testing.T) {
 	t.Parallel()
 	assert, repo := setUp(t)
 	defer tearDown(repo)
-	nct, err := repo.AddContent(NewStoreContent("catalog", "dsc"))
+	nct, err := repo.AddContent(testutils.NewStoreContent("catalog", "dsc"))
 	assert.NoErrorf(err, "expect no error from creating content %s", err)
 	key, err := strconv.ParseInt(nct.Key, 10, 64)
 	assert.NoErrorf(
@@ -169,7 +139,7 @@ func TestEditContent(t *testing.T) {
 		"expect no error from string to int64 conversion of key %s",
 		err,
 	)
-	cdata, _ := json.Marshal(&ContentJSON{
+	cdata, _ := json.Marshal(&testutils.ContentJSON{
 		Paragraph: "clompous",
 		Text:      "jack",
 	})
@@ -201,11 +171,11 @@ func TestSchemaValidation(t *testing.T) {
 	t.Parallel()
 	assert, repo := setUp(t)
 	defer tearDown(repo)
-	_, err := repo.AddContent(NewStoreContent("catalog", "dsc"))
+	_, err := repo.AddContent(testutils.NewStoreContent("catalog", "dsc"))
 	assert.NoErrorf(err, "expect no error from creating content %s", err)
-	_, err = repo.AddContent(NewStoreContent("catalog", "dsc"))
+	_, err = repo.AddContent(testutils.NewStoreContent("catalog", "dsc"))
 	assert.Error(err, "expect schema validation error for duplicate slug")
-	ncnt := NewStoreContent("price", "dsc")
+	ncnt := testutils.NewStoreContent("price", "dsc")
 	ncnt.CreatedBy = "yadayadayada"
 	_, err = repo.AddContent(ncnt)
 	assert.Error(
