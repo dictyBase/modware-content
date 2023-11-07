@@ -239,6 +239,25 @@ func TestUpdateConent(t *testing.T) {
 	)
 }
 
+func TestDeleteContent(t *testing.T) {
+	t.Parallel()
+	client, assert := setup(t)
+	nct, err := client.StoreContent(
+		context.Background(),
+		&content.StoreContentRequest{
+			Data: &content.StoreContentRequest_Data{
+				Attributes: testutils.NewStoreContent("catalog", "dsc"),
+			},
+		},
+	)
+	assert.NoError(err, "expect no error from storing content")
+	_, err = client.DeleteContent(
+		context.Background(),
+		&content.ContentIdRequest{Id: nct.Data.Id},
+	)
+	assert.NoError(err, "expect no error from deleting content")
+}
+
 func testContentProperties(
 	assert *require.Assertions,
 	sct, nct *content.Content,
