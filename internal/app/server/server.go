@@ -106,13 +106,13 @@ func allParams(
 	arPort, _ := strconv.Atoi(clt.String("arangodb-port"))
 
 	return &manager.ConnectParams{
-			User:     clt.String("arangodb-user"),
-			Pass:     clt.String("arangodb-pass"),
-			Database: clt.String("arangodb-database"),
-			Host:     clt.String("arangodb-host"),
-			Port:     arPort,
-			Istls:    clt.Bool("is-secure"),
-		}		}
+		User:     clt.String("arangodb-user"),
+		Pass:     clt.String("arangodb-pass"),
+		Database: clt.String("arangodb-database"),
+		Host:     clt.String("arangodb-host"),
+		Port:     arPort,
+		Istls:    clt.Bool("is-secure"),
+	}
 }
 
 func getGrpcOpt() []aphgrpc.Option {
@@ -126,7 +126,10 @@ func getGrpcOpt() []aphgrpc.Option {
 }
 
 func repoAndNatsConn(clt *cli.Context) (*serverParams, error) {
-	anrepo, err := arangodb.NewContentRepo(allParams(clt),clt.String("content-collection"))
+	anrepo, err := arangodb.NewContentRepo(
+		allParams(clt),
+		clt.String("content-collection"),
+	)
 	if err != nil {
 		return &serverParams{},
 			fmt.Errorf(
