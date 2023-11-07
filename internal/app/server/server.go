@@ -10,7 +10,7 @@ import (
 
 	"github.com/dictyBase/apihelpers/aphgrpc"
 	manager "github.com/dictyBase/arangomanager"
-	"github.com/dictyBase/go-genproto/dictybaseapis/annotation"
+	"github.com/dictyBase/go-genproto/dictybaseapis/content"
 	"github.com/dictyBase/modware-content/internal/app/service"
 	"github.com/dictyBase/modware-content/internal/message"
 	"github.com/dictyBase/modware-content/internal/message/nats"
