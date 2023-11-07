@@ -131,3 +131,43 @@ func TestStoreContent(t *testing.T) {
 		"should match the content",
 	)
 }
+func testContentProperties(
+	assert *require.Assertions,
+	sct, nct *content.Content,
+) {
+	assert.Equal(
+		sct.Data.Attributes.Name,
+		nct.Data.Attributes.Name,
+		"name should match",
+	)
+	assert.Equal(
+		sct.Data.Attributes.Namespace,
+		nct.Data.Attributes.Namespace,
+		"namespace should match",
+	)
+	assert.Equal(
+		sct.Data.Attributes.Slug,
+		nct.Data.Attributes.Slug,
+		"slug should match",
+	)
+	assert.Equal(
+		sct.Data.Attributes.CreatedBy,
+		nct.Data.Attributes.CreatedBy,
+		"should match created_by",
+	)
+	assert.Equal(
+		sct.Data.Attributes.CreatedAt,
+		nct.Data.Attributes.CreatedAt,
+		"created_at should match",
+	)
+	assert.Equal(
+		sct.Data.Attributes.UpdatedAt,
+		nct.Data.Attributes.UpdatedAt,
+		"updated_at should match",
+	)
+	assert.Equal(
+		sct.Data.Attributes.Content,
+		nct.Data.Attributes.Content,
+		"should match raw conent",
+	)
+}
