@@ -93,3 +93,41 @@ func setup(t *testing.T) (content.ContentServiceClient, *require.Assertions) {
 
 	return content.NewContentServiceClient(conn), assert
 }
+
+func TestStoreContent(t *testing.T) {
+	t.Parallel()
+	client, assert := setup(t)
+	nct, err := client.StoreContent(
+		context.Background(),
+		&content.StoreContentRequest{
+			Data: &content.StoreContentRequest_Data{
+				Attributes: testutils.NewStoreContent("catalog", "dsc"),
+			},
+		},
+	)
+	assert.NoError(err, "expect no error from storing content")
+	assert.Equal(nct.Data.Attributes.Name, "catalog", "name should match")
+	assert.Equal(nct.Data.Attributes.Namespace, "dsc", "namespace should match")
+	assert.Equal(nct.Data.Attributes.Slug, "catalog-dsc", "slug should match")
+	assert.Equal(
+		nct.Data.Attributes.CreatedBy,
+		"content@content.org",
+		"should match created_by",
+	)
+	assert.Equal(
+		nct.Data.Attributes.CreatedAt,
+		nct.Data.Attributes.UpdatedAt,
+		"created_at should match updated_at",
+	)
+	assert.True(
+		nct.Data.Attributes.CreatedAt.AsTime().Before(time.Now()),
+		"should have created before the current time",
+	)
+	ctnt, err := testutils.ContentFromStore(nct.Data.Attributes.Content)
+	assert.NoError(err, "should not have any error with json unmarshaling")
+	assert.Equal(
+		ctnt,
+		&testutils.ContentJSON{Paragraph: "paragraph", Text: "text"},
+		"should match the content",
+	)
+}
