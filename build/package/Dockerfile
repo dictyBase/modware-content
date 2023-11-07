@@ -12,10 +12,8 @@ COPY go.mod ./
 COPY go.sum ./
 COPY main.go ./
 RUN go mod download
-ADD server server
-ADD commands commands
-ADD message message
-ADD validate validate
+ADD cmd cmd
+ADD internal internal
 RUN go build \
     -a \
     -ldflags "-s -w -extldflags '-static'" \
