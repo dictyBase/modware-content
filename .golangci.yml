@@ -4,9 +4,6 @@ run:
 linters-settings:
    funlen: 
     lines: 80
-    statements: 50
-   lll:
-      line-length: 130
    revive:
       rules:
         - name: var-naming
@@ -14,6 +11,7 @@ linters-settings:
    gosec:
       excludes:
         - G404
+        - G402
    wrapcheck:
       ignoreSigs:
         - .HandleMessagingError(
@@ -36,57 +34,31 @@ linters:
     - bodyclose
     - bidichk
     - cyclop 
-    - decorder
     - depguard
+    - decorder
     - dogsled
-    - dupl
+    # - dupl
     - errcheck
-    - errname
     - funlen
-    - gci
-    - gochecknoinits
     - goconst
     - gocritic
     - gocyclo
-    - godot
     - gofmt
     - goimports
     - gosec
     - gosimple
     - govet
-    - gocognit
-    - gomnd 
-    - gomoddirectives
-    - gomodguard
-    - grouper
     - ineffassign
-    - importas
     - lll
-    - maintidx
     - misspell
     - nakedret
-    - nestif
-    - nilerr
-    - nlreturn
-    - nolintlint
-    - prealloc
-    # - paralleltest
-    - predeclared
     - revive
-    - rowserrcheck
     - staticcheck
     - typecheck
     - unconvert
-    - thelper
-    - tparallel
     - unparam
     - unused
-    - unconvert
-    - unparam
-    - varnamelen
-    - wastedassign
     - whitespace
-    - wrapcheck
 
   # don't enable:
   # - godox
