@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"encoding/json"
 	"net"
 	"os"
 	"testing"
@@ -170,6 +171,72 @@ func TestGetContent(t *testing.T) {
 	)
 	assert.NoError(err, "expect no error from fetching content by id")
 	testContentProperties(assert, sct, nct)
+}
+
+func TestUpdateConent(t *testing.T) {
+	t.Parallel()
+	client, assert := setup(t)
+	nct, err := client.StoreContent(
+		context.Background(),
+		&content.StoreContentRequest{
+			Data: &content.StoreContentRequest_Data{
+				Attributes: testutils.NewStoreContent("catalog", "dsc"),
+			},
+		},
+	)
+	assert.NoError(err, "expect no error from storing content")
+	cdata, _ := json.Marshal(&testutils.ContentJSON{
+		Paragraph: "clompous",
+		Text:      "jack",
+	})
+	sct, err := client.UpdateContent(
+		context.Background(),
+		&content.UpdateContentRequest{
+			Id: nct.Data.Id,
+			Data: &content.UpdateContentRequest_Data{
+				Attributes: &content.ExistingContentAttributes{
+					UpdatedBy: "packer@packer.com",
+					Content:   string(cdata),
+				},
+			},
+		},
+	)
+	assert.NoErrorf(err, "expect no error from updating content %s", err)
+	assert.Equal(
+		sct.Data.Attributes.UpdatedBy,
+		"packer@packer.com",
+		"should match updated by",
+	)
+	assert.Equal(
+		[]byte(sct.Data.Attributes.Content),
+		cdata,
+		"should match updated content",
+	)
+	assert.True(
+		sct.Data.Attributes.UpdatedAt.AsTime().
+			After(sct.Data.Attributes.CreatedAt.AsTime()),
+		"should have correct updated timestamp",
+	)
+	assert.Equal(
+		sct.Data.Attributes.Name,
+		nct.Data.Attributes.Name,
+		"name should match",
+	)
+	assert.Equal(
+		sct.Data.Attributes.Namespace,
+		nct.Data.Attributes.Namespace,
+		"namespace should match",
+	)
+	assert.Equal(
+		sct.Data.Attributes.Slug,
+		nct.Data.Attributes.Slug,
+		"slug should match",
+	)
+	assert.Equal(
+		sct.Data.Attributes.CreatedBy,
+		nct.Data.Attributes.CreatedBy,
+		"should match created_by",
+	)
 }
 
 func testContentProperties(
