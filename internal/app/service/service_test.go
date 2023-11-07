@@ -131,6 +131,25 @@ func TestStoreContent(t *testing.T) {
 		"should match the content",
 	)
 }
+func TestGetContentBySlug(t *testing.T) {
+	t.Parallel()
+	client, assert := setup(t)
+	nct, err := client.StoreContent(
+		context.Background(),
+		&content.StoreContentRequest{
+			Data: &content.StoreContentRequest_Data{
+				Attributes: testutils.NewStoreContent("catalog", "dsc"),
+			},
+		},
+	)
+	assert.NoError(err, "expect no error from storing content")
+	sct, err := client.GetContentBySlug(
+		context.Background(),
+		&content.ContentRequest{Slug: nct.Data.Attributes.Slug},
+	)
+	assert.NoError(err, "expect no error from fetching content by slug")
+	testContentProperties(assert, sct, nct)
+}
 func testContentProperties(
 	assert *require.Assertions,
 	sct, nct *content.Content,
