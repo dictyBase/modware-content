@@ -10,7 +10,6 @@ RUN mkdir -p /modware-content
 WORKDIR /modware-content
 COPY go.mod ./
 COPY go.sum ./
-COPY main.go ./
 RUN go mod download
 ADD cmd cmd
 ADD internal internal
@@ -20,7 +19,7 @@ RUN go build \
     -installsuffix cgo \
     -tags netgo \
     -o /bin/app \
-    main.go
+    cmd/modware-content/main.go
 RUN upx -q -9 /bin/app
 
 FROM gcr.io/distroless/static
