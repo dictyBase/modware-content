@@ -7,31 +7,26 @@ jobs:
   test:
     runs-on: ubuntu-latest
     services:
-      postgres:
-        image: postgres:9.6.6-alpine
+      arangodb:
+        image: arangodb:3.10.9
         env:
-          POSTGRES_DB: pgtest
-          POSTGRES_USER: pguser
-          POSTGRES_PASSWORD: pgdocker
+          ARANGO_ROOT_PASSWORD: rootpass
         ports:
-          - 5432/tcp
+          - 8529/tcp
     steps:
       - name: set up golang
         uses: actions/setup-go@v4
         with:
           go-version: '~1.20.6'
       - name: check out code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v3
       - name: unit test
-        run: go test -covermode=atomic -coverprofile=profile.cov -v ./...
+        run: go test -parallel 4 -covermode=atomic -coverprofile=profile.cov -v ./...
         env:
-          POSTGRES_DB: pgtest
-          POSTGRES_USER: pguser
-          POSTGRES_PASSWORD: pgdocker
-          POSTGRES_HOST: localhost
-          POSTGRES_PORT: ${{ job.services.postgres.ports[5432] }}
-          NATS_HOST: localhost
-          NATS_PORT: ${{ job.services.nats.ports[4222] }}
+          ARANGO_USER: root
+          ARANGO_PASS: rootpass
+          ARANGO_HOST: localhost
+          ARANGO_PORT: ${{ job.services.arangodb.ports[8529] }}
           GOPROXY: https://proxy.golang.org
       - name: upload coverage to codecov
         uses: codecov/codecov-action@v3
