@@ -8,7 +8,7 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/dictyBase/apihelpers/aphgrpc"
+	"github.com/dictyBase/aphgrpc"
 	manager "github.com/dictyBase/arangomanager"
 	"github.com/dictyBase/go-genproto/dictybaseapis/content"
 	"github.com/dictyBase/modware-content/internal/app/service"
@@ -17,6 +17,8 @@ import (
 	"github.com/dictyBase/modware-content/internal/repository"
 	"github.com/dictyBase/modware-content/internal/repository/arangodb"
 	grpc_logrus "github.com/grpc-ecosystem/go-grpc-middleware/logging/logrus"
+	grpc_ctxtags "github.com/grpc-ecosystem/go-grpc-middleware/tags"
+	gnats "github.com/nats-io/nats.go"
 	"github.com/sirupsen/logrus"
 	"github.com/urfave/cli"
 	"google.golang.org/grpc"
@@ -139,7 +141,7 @@ func repoAndNatsConn(clt *cli.Context) (*serverParams, error) {
 	}
 	msp, err := nats.NewPublisher(
 		clt.String("nats-host"), clt.String("nats-port"),
-		gnats.MaxReconnects(-1), gnats.ReconnectWait(waitTime*time.Second),
+		gnats.MaxReconnects(-1), gnats.ReconnectWait(Timeout*time.Second),
 	)
 	if err != nil {
 		return &serverParams{},
