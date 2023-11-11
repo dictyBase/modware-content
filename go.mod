@@ -1,7 +1,7 @@
 module github.com/dictyBase/modware-content
 
 require (
-	github.com/arangodb/go-driver v1.6.0
+	github.com/arangodb/go-driver v1.6.1
 	github.com/dictyBase/aphgrpc v1.4.2
 	github.com/dictyBase/arangomanager v0.4.0
 	github.com/dictyBase/go-genproto v0.0.0-20231030202356-522cb6f9976a
