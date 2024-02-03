@@ -29,7 +29,7 @@ jobs:
           ARANGO_PORT: ${{ job.services.arangodb.ports[8529] }}
           GOPROXY: https://proxy.golang.org
       - name: upload coverage to codecov
-        uses: codecov/codecov-action@v3
+        uses: codecov/codecov-action@v4
         with:
           file: ./profile.cov
   call-docker-build:
