@@ -79,7 +79,10 @@ func (srv *ContentService) GetContentBySlug(
 		return ctnt, aphgrpc.HandleGetError(ctx, err)
 	}
 	if mcont.NotFound {
-		return ctnt, aphgrpc.HandleNotFoundError(ctx, err)
+		return ctnt, aphgrpc.HandleNotFoundError(
+			ctx,
+			fmt.Errorf("slug %s not found", rdr.Slug),
+		)
 	}
 	cid, _ := strconv.ParseInt(mcont.Key, 10, 64)
 
@@ -99,7 +102,10 @@ func (srv *ContentService) GetContent(
 		return ctnt, aphgrpc.HandleGetError(ctx, err)
 	}
 	if mcont.NotFound {
-		return ctnt, aphgrpc.HandleNotFoundError(ctx, err)
+		return ctnt, aphgrpc.HandleNotFoundError(
+			ctx,
+			fmt.Errorf("id %d not found", rdr.Id),
+		)
 	}
 	cid, _ := strconv.ParseInt(mcont.Key, 10, 64)
 
