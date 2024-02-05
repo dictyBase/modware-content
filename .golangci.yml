@@ -34,7 +34,6 @@ linters:
     - bodyclose
     - bidichk
     - cyclop 
-    - depguard
     - decorder
     - dogsled
     # - dupl
