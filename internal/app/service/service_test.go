@@ -16,7 +16,9 @@ import (
 	"github.com/dictyBase/modware-content/internal/testutils"
 	"github.com/stretchr/testify/require"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/credentials/insecure"
+	"google.golang.org/grpc/status"
 	"google.golang.org/grpc/test/bufconn"
 )
 
@@ -151,6 +153,17 @@ func TestGetContentBySlug(t *testing.T) {
 	)
 	assert.NoError(err, "expect no error from fetching content by slug")
 	testContentProperties(assert, sct, nct)
+
+	_, err = client.GetContentBySlug(
+		context.Background(),
+		&content.ContentRequest{Slug: "blog"},
+	)
+	assert.Error(err, "expect not found error")
+	assert.Equal(
+		status.Code(err),
+		codes.NotFound,
+		"should match the not found error",
+	)
 }
 
 func TestGetContent(t *testing.T) {
@@ -171,6 +184,17 @@ func TestGetContent(t *testing.T) {
 	)
 	assert.NoError(err, "expect no error from fetching content by id")
 	testContentProperties(assert, sct, nct)
+
+	_, err = client.GetContent(
+		context.Background(),
+		&content.ContentIdRequest{Id: int64(5600000)},
+	)
+	assert.Error(err, "expect not found error")
+	assert.Equal(
+		status.Code(err),
+		codes.NotFound,
+		"should match the not found error",
+	)
 }
 
 func TestUpdateConent(t *testing.T) {
