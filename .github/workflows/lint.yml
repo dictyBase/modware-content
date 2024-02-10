@@ -15,6 +15,6 @@ jobs:
           cache: false
       - run: go version
       - name: run linter
-        uses: golangci/golangci-lint-action@v3
+        uses: golangci/golangci-lint-action@v4
         with: 
           version: v1.55.2
