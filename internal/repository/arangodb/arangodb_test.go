@@ -152,6 +152,11 @@ func TestEditContent(t *testing.T) {
 	)
 	assert.NoErrorf(err, "expect no error from updating content %s", err)
 	assert.Equal(sct.UpdatedBy, "packer@packer.com", "should match updated by")
+	assert.NotEqual(
+		sct.UpdatedBy,
+		sct.CreatedBy,
+		"update and creation email should not match",
+	)
 	assert.Equal([]byte(sct.Content), cdata, "should match updated content")
 	assert.True(
 		sct.UpdatedOn.After(sct.CreatedOn),
@@ -164,6 +169,14 @@ func TestEditContent(t *testing.T) {
 		sct.CreatedBy,
 		nct.CreatedBy,
 		"should match created_by",
+	)
+	act, err := repo.GetContentBySlug(sct.Slug)
+	assert.NoError(err, "expect no error for retrieval after update")
+	assert.Equal(act.UpdatedBy, sct.UpdatedBy, "should match updated_by")
+	assert.NotEqual(
+		act.UpdatedBy,
+		act.CreatedBy,
+		"update and created email should not match",
 	)
 }
 
@@ -196,6 +209,7 @@ func testContentProperties(
 		nct.CreatedBy,
 		"should match created_by",
 	)
+	assert.Equal(sct.UpdatedBy, nct.UpdatedBy, "should match updated by")
 	assert.True(
 		sct.CreatedOn.Equal(nct.CreatedOn),
 		"created_on should match",
