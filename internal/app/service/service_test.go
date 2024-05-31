@@ -80,8 +80,7 @@ func setup(t *testing.T) (content.ContentServiceClient, *require.Assertions) {
 
 		return conn, nil
 	}
-	conn, err := grpc.DialContext(
-		context.Background(),
+	conn, err := grpc.NewClient(
 		"",
 		grpc.WithContextDialer(dialer),
 		grpc.WithTransportCredentials(insecure.NewCredentials()),
