@@ -1,4 +1,4 @@
-# modware-user
+# modware-content
 [![License](https://img.shields.io/badge/License-BSD%202--Clause-blue.svg)](LICENSE)  
 ![Continuous integration](https://github.com/dictyBase/modware-content/workflows/Continuous%20integration/badge.svg)
 [![codecov](https://codecov.io/gh/dictyBase/modware-content/branch/develop/graph/badge.svg)](https://codecov.io/gh/dictyBase/modware-content)
