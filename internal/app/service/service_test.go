@@ -8,6 +8,8 @@ import (
 	"testing"
 	"time"
 
+	"google.golang.org/grpc/resolver"
+
 	"github.com/dictyBase/aphgrpc"
 	manager "github.com/dictyBase/arangomanager"
 	"github.com/dictyBase/arangomanager/testarango"
@@ -77,13 +79,13 @@ func setup(t *testing.T) (content.ContentServiceClient, *require.Assertions) {
 	dialer := func(context.Context, string) (net.Conn, error) {
 		conn, err := listener.Dial()
 		assert.NoError(err, "expect no error from creating listener")
-
 		return conn, nil
 	}
+	resolver.SetDefaultScheme("passthrough")
 	conn, err := grpc.NewClient(
-		"",
-		grpc.WithContextDialer(dialer),
+		"bufnet",
 		grpc.WithTransportCredentials(insecure.NewCredentials()),
+		grpc.WithContextDialer(dialer),
 	)
 	assert.NoError(err, "expect no error in creating grpc client")
 	t.Cleanup(func() {
