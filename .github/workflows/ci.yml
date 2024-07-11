@@ -1,4 +1,4 @@
-name: Continuous integration
+name: Continuous integration, build and deploy
 on:
   push:
     branches:
@@ -33,12 +33,15 @@ jobs:
         with:
           file: ./profile.cov
           token: ${{ secrets.CODECOV }}
-  call-docker-build:
+  call-build-deploy:
     needs: test
-    uses: dictyBase/workflows/.github/workflows/docker-publish.yaml@main
+    uses: dictyBase/workflows/.github/workflows/composite-backend-deploy.yaml@develop
     secrets: inherit
     with:
+      app: content
       repository: ${{ github.repository }}
-      ref: ${{ github.ref_name }}
       image: modware-content
+      ref: ${{ github.ref_name }}
       dockerfile: build/package/Dockerfile 
+      cluster: ${{ vars.DEV_STAGING_CLUSTER }}
+      cluster_state_storage: ${{ vars.DEV_STAGING_KOPS_STATE_STORAGE }}
