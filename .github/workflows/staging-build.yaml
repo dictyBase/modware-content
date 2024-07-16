@@ -1,12 +1,18 @@
-name: Staging Build
+name: Staging build and deploy
 on:
   push:
     branches:
       - staging
 jobs:
-  call-docker-build:
-    uses: dictyBase/workflows/.github/workflows/docker-build-push.yaml@develop
+  call-build-deploy:
+    uses: dictyBase/workflows/.github/workflows/composite-backend-deploy.yaml@develop
     secrets: inherit
     with:
+      app: content
       repository: ${{ github.repository }}
+      image: modware-content
       ref: ${{ github.ref_name }}
+      dockerfile: build/package/Dockerfile 
+      cluster: ${{ vars.DEV_STAGING_CLUSTER }}
+      cluster_state_storage: ${{ vars.DEV_STAGING_KOPS_STATE_STORAGE }}
+      stack: staging
