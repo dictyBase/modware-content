@@ -35,13 +35,13 @@ jobs:
           token: ${{ secrets.CODECOV }}
   call-build-deploy:
     needs: test
-    uses: dictyBase/workflows/.github/workflows/composite-deploy.yaml@main
+    uses: dictyBase/workflows/.github/workflows/composite-deploy.yaml@develop
     secrets: inherit
     with:
       app: content
       repository: ${{ github.repository }}
-      image: modware-content
       ref: ${{ github.ref_name }}
       dockerfile: build/package/Dockerfile 
+      docker_image: modware-content
       cluster: ${{ vars.DEV_STAGING_CLUSTER }}
       cluster_state_storage: ${{ vars.DEV_STAGING_KOPS_STATE_STORAGE }}
