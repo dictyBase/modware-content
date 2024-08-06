@@ -5,7 +5,7 @@ on:
       - staging
 jobs:
   call-build-deploy:
-    uses: dictyBase/workflows/.github/workflows/composite-backend-deploy.yaml@main
+    uses: dictyBase/workflows/.github/workflows/composite-deploy.yaml@main
     secrets: inherit
     with:
       app: content
@@ -13,6 +13,8 @@ jobs:
       image: modware-content
       ref: ${{ github.ref_name }}
       dockerfile: build/package/Dockerfile 
+      docker_image: modware-content
       cluster: ${{ vars.DEV_STAGING_CLUSTER }}
       cluster_state_storage: ${{ vars.DEV_STAGING_KOPS_STATE_STORAGE }}
       stack: staging
+      environment: staging
