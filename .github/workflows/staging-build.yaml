@@ -10,7 +10,6 @@ jobs:
     with:
       app: content
       repository: ${{ github.repository }}
-      image: modware-content
       ref: ${{ github.ref_name }}
       dockerfile: build/package/Dockerfile 
       docker_image: modware-content
