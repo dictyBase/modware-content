@@ -35,7 +35,7 @@ jobs:
           token: ${{ secrets.CODECOV }}
   call-build-deploy:
     needs: test
-    uses: dictyBase/workflows/.github/workflows/composite-deploy.yaml@develop
+    uses: dictyBase/workflows/.github/workflows/composite-deploy.yaml@main
     secrets: inherit
     with:
       app: content
