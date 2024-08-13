@@ -7,7 +7,34 @@ const (
 			LIMIT 1
 			RETURN cnt
 	`
-
+	ContentList = `
+		FOR cnt IN @@content_collection
+			SORT cnt.created_on DESC
+			LIMIT @limit
+			RETURN cnt
+	`
+	ContentListWithCursor = `
+		FOR cnt IN @@content_collection
+			FILTER cnt.created_on <= DATE_ISO8601(@cursor)
+			SORT cnt.created_on DESC
+			LIMIT @limit
+			RETURN cnt
+	`
+	ContentListFilter = `
+		FOR cnt IN @@content_collection
+			%s
+			SORT cnt.created_on DESC
+			LIMIT @limit
+			RETURN cnt
+	`
+	ContentListFilterWithCursor = `
+		FOR cnt IN @@content_collection
+			FILTER cnt.created_on <= DATE_ISO8601(@cursor)
+			%s
+			SORT cnt.created_on DESC
+			LIMIT @limit
+			RETURN cnt
+	`
 	ContentInsert = `
 		INSERT {
 			name: @name,
