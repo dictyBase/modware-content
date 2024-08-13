@@ -15,7 +15,11 @@ type ContentRepository interface {
 		cnt *content.ExistingContentAttributes,
 	) (*model.ContentDoc, error)
 	DeleteContent(cid int64) error
-	ListContents(int64, int64, string) (*[]model.ContentDoc, error)
+	ListContents(
+		cursor int64,
+		limit int64,
+		filter string,
+	) ([]*model.ContentDoc, error)
 	Dbh() *manager.Database
 }
 

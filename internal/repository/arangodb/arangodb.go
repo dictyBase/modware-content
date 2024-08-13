@@ -217,6 +217,42 @@ func (arp *arangorepository) Dbh() *manager.Database {
 	return arp.database
 }
 
+func (arp *arangorepository) ListContents(
+	cursor int64,
+	limit int64,
+	filter string,
+) ([]*model.ContentDoc, error) {
+	bindVars := map[string]interface{}{
+		"@content_collection": arp.content.Name(),
+		"limit":               limit + 1,
+	}
+	if cursor != 0 {
+		bindVars["cursor"] = cursor
+	}
+	stmt := getListContentStatement(filter, cursor)
+	res, err := arp.database.SearchRows(stmt, bindVars)
+	if err != nil {
+		return nil, fmt.Errorf("error in searching rows %s", err)
+	}
+	if res.IsEmpty() {
+		return nil, &repository.ContentListNotFoundError{}
+	}
+
+	contentModel := make([]*model.ContentDoc, 0)
+	for res.Scan() {
+		m := &model.ContentDoc{}
+		if err := res.Read(m); err != nil {
+			return nil, fmt.Errorf(
+				"error in reading data to structure %s",
+				err,
+			)
+		}
+		contentModel = append(contentModel, m)
+	}
+
+	return contentModel, nil
+}
+
 func getListContentStatement(filter string, cursor int64) string {
 	var stmt string
 	switch {
