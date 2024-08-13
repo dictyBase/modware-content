@@ -216,3 +216,19 @@ func (arp *arangorepository) EditContent(
 func (arp *arangorepository) Dbh() *manager.Database {
 	return arp.database
 }
+
+func getListContentStatement(filter string, cursor int64) string {
+	var stmt string
+	switch {
+	case len(filter) > 0 && cursor == 0:
+		stmt = fmt.Sprintf(ContentListFilter, filter)
+	case len(filter) > 0 && cursor != 0:
+		stmt = fmt.Sprintf(ContentListFilterWithCursor, filter)
+	case len(filter) == 0 && cursor == 0:
+		stmt = ContentList
+	case len(filter) == 0 && cursor != 0:
+		stmt = ContentListWithCursor
+	}
+
+	return stmt
+}
