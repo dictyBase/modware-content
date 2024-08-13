@@ -15,5 +15,20 @@ type ContentRepository interface {
 		cnt *content.ExistingContentAttributes,
 	) (*model.ContentDoc, error)
 	DeleteContent(cid int64) error
+	ListContents(int64, int64, string) (*[]model.ContentDoc, error)
 	Dbh() *manager.Database
+}
+
+type ContentListNotFoundError struct{}
+
+func (al *ContentListNotFoundError) Error() string {
+	return "annotation list not found"
+}
+
+func IsContentListNotFound(err error) bool {
+	if _, ok := err.(*ContentListNotFoundError); ok {
+		return true
+	}
+
+	return false
 }
