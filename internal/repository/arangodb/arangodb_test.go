@@ -2,6 +2,8 @@ package arangodb
 
 import (
 	"encoding/json"
+	"fmt"
+	"regexp"
 	"strconv"
 	"testing"
 	"time"
@@ -85,6 +87,42 @@ func TestGetContentBySlug(t *testing.T) {
 	sct, err := repo.GetContentBySlug(nct.Slug)
 	assert.NoErrorf(err, "expect no error from getting content by slug %s", err)
 	testContentProperties(assert, sct, nct)
+}
+
+func TestListContents(t *testing.T) {
+	t.Parallel()
+	assert, repo := setUp(t)
+	defer tearDown(repo)
+	for i := 0; i < 19; i++ {
+		_, err := repo.AddContent(
+			testutils.NewStoreContent(fmt.Sprintf("gallery-%d", i), "genome"),
+		)
+		assert.NoErrorf(
+			err,
+			"expect no error from creating gallery genome content %s",
+			err,
+		)
+	}
+	clist, err := repo.ListContents(0, 4, "")
+	assert.NoError(err, "expect no error from listing content")
+	assert.Len(clist, 5, "should have 5 content entries")
+	nrxp := regexp.MustCompile(`gallery-\d+`)
+	for _, cnt := range clist {
+		assert.Equal(
+			cnt.Namespace,
+			"genome",
+			"should match the genome namespace",
+		)
+		assert.Regexp(nrxp, cnt.Name, "should match gallery names")
+	}
+	assert.True(
+		clist[0].CreatedOn.After(clist[1].CreatedOn),
+		"first gallery record should be created after the second one",
+	)
+	assert.False(
+		clist[2].CreatedOn.After(clist[1].CreatedOn),
+		"third gallery record should not be created after the second one",
+	)
 }
 
 func TestGetContent(t *testing.T) {
