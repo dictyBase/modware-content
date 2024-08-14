@@ -93,37 +93,17 @@ func TestListContents(t *testing.T) {
 	t.Parallel()
 	assert, repo := setUp(t)
 	defer tearDown(repo)
-	for i := 0; i < 14; i++ {
-		_, err := repo.AddContent(
-			testutils.NewStoreContent(fmt.Sprintf("gallery-%d", i), "genome"),
-		)
-		assert.NoErrorf(
-			err,
-			"expect no error from creating gallery genome content %s",
-			err,
-		)
-	}
+
+	// Create test data
+	createTestContents(assert, repo, 14)
+
+	// Test initial list
 	clist, err := repo.ListContents(0, 4, "")
 	assert.NoError(err, "expect no error from listing content")
 	assert.Len(clist, 5, "should have 5 content entries")
-	nrxp := regexp.MustCompile(`gallery-\d+`)
-	for idx, cnt := range clist {
-		assert.Equal(
-			cnt.Namespace,
-			"genome",
-			"should match the genome namespace",
-		)
-		assert.Regexp(nrxp, cnt.Name, "should match gallery names")
-		assert.Equal(
-			cnt.CreatedBy, "content@content.org", "should match the created_by",
-		)
-		if idx != 0 {
-			assert.True(
-				clist[idx-1].CreatedOn.After(clist[idx].CreatedOn),
-				"previous gallery record should be created after the current one",
-			)
-		}
-	}
+	validateContentList(assert, clist)
+
+	// Test pagination
 	clist2, err := repo.ListContents(
 		clist[len(clist)-1].CreatedOn.UnixMilli(),
 		5,
@@ -136,18 +116,63 @@ func TestListContents(t *testing.T) {
 		clist2[0],
 		"should be identical content object",
 	)
+
+	// Test final page
 	clist3, err := repo.ListContents(
 		clist2[len(clist2)-1].CreatedOn.UnixMilli(),
 		7,
 		"",
 	)
 	assert.NoError(err, "expect no error from listing content")
-	assert.Len(clist3, 5, "should have 4 content entries")
+	assert.Len(clist3, 5, "should have 5 content entries")
 	assert.Exactly(
 		clist2[len(clist2)-1],
 		clist3[0],
 		"should be identical content object",
 	)
+}
+
+func createTestContents(
+	assert *require.Assertions,
+	repo repository.ContentRepository,
+	count int,
+) {
+	for i := 0; i < count; i++ {
+		_, err := repo.AddContent(
+			testutils.NewStoreContent(fmt.Sprintf("gallery-%d", i), "genome"),
+		)
+		assert.NoErrorf(
+			err,
+			"expect no error from creating gallery genome content %s",
+			err,
+		)
+	}
+}
+
+func validateContentList(
+	assert *require.Assertions,
+	clist []*model.ContentDoc,
+) {
+	nrxp := regexp.MustCompile(`gallery-\d+`)
+	for idx, cnt := range clist {
+		assert.Equal(
+			cnt.Namespace,
+			"genome",
+			"should match the genome namespace",
+		)
+		assert.Regexp(nrxp, cnt.Name, "should match gallery names")
+		assert.Equal(
+			cnt.CreatedBy,
+			"content@content.org",
+			"should match the created_by",
+		)
+		if idx != 0 {
+			assert.True(
+				clist[idx-1].CreatedOn.After(clist[idx].CreatedOn),
+				"previous gallery record should be created after the current one",
+			)
+		}
+	}
 }
 
 func TestGetContent(t *testing.T) {
