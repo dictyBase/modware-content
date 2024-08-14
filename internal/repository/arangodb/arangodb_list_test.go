@@ -12,6 +12,17 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+type TestCaseWithFilterandCursor struct {
+	name                    string
+	filter                  string
+	initialLimit            int64
+	subsequentLimit         int64
+	expectedName            string
+	expectedNS              string
+	expectedInitialCount    int
+	expectedSubsequentCount int
+}
+
 func TestListContents(t *testing.T) {
 	t.Parallel()
 	assert, repo := setUp(t)
@@ -119,44 +130,95 @@ func TestListContentsWithFilter(t *testing.T) {
 		})
 	}
 }
-	// Test list with filter
-	filter := `FILTER cnt.namespace == "longbottom"`
-	clist, err := repo.ListContents(0, 14, filter)
-	assert.NoError(err, "expect no error from listing content with filter")
-	assert.Len(clist, 6, "should have 5 content entries")
-	validateContentList(assert, clist, "sword", "longbottom")
 
-	// Test list with filter matching substring of slug
-	filter = `FILTER cnt.slug =~ "drink"`
-	clist, err = repo.ListContents(0, 15, filter)
+func createTestCases() []TestCaseWithFilterandCursor {
+	return []TestCaseWithFilterandCursor{
+		{
+			name:                    "Filter by namespace",
+			filter:                  `FILTER cnt.namespace == "hogwarts"`,
+			initialLimit:            5,
+			subsequentLimit:         5,
+			expectedName:            "wand",
+			expectedNS:              "hogwarts",
+			expectedInitialCount:    6,
+			expectedSubsequentCount: 5,
+		},
+		{
+			name:                    "Filter by slug substring",
+			filter:                  `FILTER cnt.slug =~ "potion"`,
+			initialLimit:            7,
+			subsequentLimit:         7,
+			expectedName:            "potion",
+			expectedNS:              "hogsmeade",
+			expectedInitialCount:    8,
+			expectedSubsequentCount: 5,
+		},
+		{
+			name:                    "Combination filter",
+			filter:                  `FILTER cnt.name =~ "wand-" AND cnt.namespace =~ "hog"`,
+			initialLimit:            6,
+			subsequentLimit:         6,
+			expectedName:            "wand",
+			expectedNS:              "hogwarts",
+			expectedInitialCount:    7,
+			expectedSubsequentCount: 4,
+		},
+	}
+}
+
+func TestListContentsWithFilterAndCursor(t *testing.T) {
+	t.Parallel()
+	assert, repo := setUp(t)
+	defer tearDown(repo)
+	createCustomTestContents(assert, repo, 10, "wand", "hogwarts")
+	createCustomTestContents(assert, repo, 12, "potion", "hogsmeade")
+
+	for _, tc := range createTestCases() {
+		t.Run(tc.name, func(t *testing.T) {
+			runListContentsWithFilterAndCursorSubtest(assert, repo, tc)
+		})
+	}
+}
+
+func runListContentsWithFilterAndCursorSubtest(
+	assert *require.Assertions,
+	repo repository.ContentRepository,
+	tc TestCaseWithFilterandCursor,
+) {
+	// Initial list
+	clist, err := repo.ListContents(0, tc.initialLimit, tc.filter)
 	assert.NoError(
 		err,
-		"expect no error from listing content with filter matching substring of slug",
+		"expect no error from listing content with filter",
 	)
-	assert.Len(clist, 8, "should have 8 content entries")
-	validateContentList(assert, clist, "field", "drinkwater")
+	assert.Len(
+		clist,
+		tc.expectedInitialCount,
+		"should have expected number of content entries",
+	)
+	validateContentList(assert, clist, tc.expectedName, tc.expectedNS)
 
-	// Test combination filter with multiple results
-	filter = `FILTER cnt.name =~ "sword-" AND cnt.namespace =~ "long"`
-	clist, err = repo.ListContents(0, 10, filter)
+	// Subsequent list with cursor
+	clist2, err := repo.ListContents(
+		clist[len(clist)-1].CreatedOn.UnixMilli(),
+		tc.subsequentLimit,
+		tc.filter,
+	)
 	assert.NoError(
 		err,
-		"expect no error from listing content with combination filter (multiple results)",
+		"expect no error from listing content with filter and cursor",
 	)
-	assert.Len(clist, 6, "should have 6 content entries")
-	validateContentList(assert, clist, "sword", "longbottom")
-
-	// Test combination filter with no results
-	filter = `FILTER cnt.name == "sword-3" AND cnt.namespace =~ "drink"`
-	_, err = repo.ListContents(0, 10, filter)
-	assert.Error(
-		err,
-		"expect error from listing content with combination filter (no results)",
+	assert.Len(
+		clist2,
+		tc.expectedSubsequentCount,
+		"should have expected number of content entries",
 	)
-	assert.True(
-		repository.IsContentListNotFound(err),
-		"should be list not found type of error",
+	assert.Exactly(
+		clist[len(clist)-1],
+		clist2[0],
+		"should be identical content object",
 	)
+	validateContentList(assert, clist2, tc.expectedName, tc.expectedNS)
 }
 
 func createCustomTestContents(
