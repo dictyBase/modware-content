@@ -73,6 +73,24 @@ func createTestContents(
 	}
 }
 
+func createCustomTestContents(
+	assert *require.Assertions,
+	repo repository.ContentRepository,
+	count int,
+	name, namespace string,
+) {
+	for i := 0; i < count; i++ {
+		time.Sleep(1 * time.Millisecond)
+		_, err := repo.AddContent(
+			testutils.NewStoreContent(fmt.Sprintf("%s-%d", name, i), namespace),
+		)
+		assert.NoErrorf(
+			err,
+			"expect no error from creating %s %s content %s",
+			name, namespace, err,
+		)
+	}
+}
 func validateContentList(
 	assert *require.Assertions,
 	clist []*model.ContentDoc,
