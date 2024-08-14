@@ -19,6 +19,7 @@ func TestListContents(t *testing.T) {
 
 	// Create test data
 	createTestContents(assert, repo, 14)
+	createCustomTestContents(assert, repo, 14, "gallery", "genome")
 
 	// Test initial list
 	clist, err := repo.ListContents(0, 4, "")
@@ -55,22 +56,6 @@ func TestListContents(t *testing.T) {
 	)
 }
 
-func createTestContents(
-	assert *require.Assertions,
-	repo repository.ContentRepository,
-	count int,
-) {
-	for i := 0; i < count; i++ {
-		time.Sleep(1 * time.Millisecond)
-		_, err := repo.AddContent(
-			testutils.NewStoreContent(fmt.Sprintf("gallery-%d", i), "genome"),
-		)
-		assert.NoErrorf(
-			err,
-			"expect no error from creating gallery genome content %s",
-			err,
-		)
-	}
 }
 
 func createCustomTestContents(
