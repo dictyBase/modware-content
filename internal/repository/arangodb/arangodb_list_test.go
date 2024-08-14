@@ -63,6 +63,62 @@ func TestListContentsWithFilter(t *testing.T) {
 	createCustomTestContents(assert, repo, 6, "sword", "longbottom")
 	createCustomTestContents(assert, repo, 8, "field", "drinkwater")
 
+	testCases := []struct {
+		name          string
+		filter        string
+		expectedCount int
+		expectedName  string
+		expectedNS    string
+		expectError   bool
+	}{
+		{
+			name:          "Filter by namespace",
+			filter:        `FILTER cnt.namespace == "longbottom"`,
+			expectedCount: 6,
+			expectedName:  "sword",
+			expectedNS:    "longbottom",
+			expectError:   false,
+		},
+		{
+			name:          "Filter by slug substring",
+			filter:        `FILTER cnt.slug =~ "drink"`,
+			expectedCount: 8,
+			expectedName:  "field",
+			expectedNS:    "drinkwater",
+			expectError:   false,
+		},
+		{
+			name:          "Combination filter with multiple results",
+			filter:        `FILTER cnt.name =~ "sword-" AND cnt.namespace =~ "long"`,
+			expectedCount: 6,
+			expectedName:  "sword",
+			expectedNS:    "longbottom",
+			expectError:   false,
+		},
+		{
+			name:        "Combination filter with no results",
+			filter:      `FILTER cnt.name == "sword-3" AND cnt.namespace =~ "drink"`,
+			expectError: true,
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			clist, err := repo.ListContents(0, 15, tc.filter)
+			if tc.expectError {
+				assert.Error(err, "expect error from listing content")
+				assert.True(
+					repository.IsContentListNotFound(err),
+					"should be list not found type of error",
+				)
+			} else {
+				assert.NoError(err, "expect no error from listing content")
+				assert.Len(clist, tc.expectedCount, "should have expected number of content entries")
+				validateContentList(assert, clist, tc.expectedName, tc.expectedNS)
+			}
+		})
+	}
+}
 	// Test list with filter
 	filter := `FILTER cnt.namespace == "longbottom"`
 	clist, err := repo.ListContents(0, 14, filter)
