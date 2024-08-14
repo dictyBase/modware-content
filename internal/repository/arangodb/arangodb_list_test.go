@@ -76,29 +76,29 @@ func createCustomTestContents(
 		)
 	}
 }
+
 func validateContentList(
 	assert *require.Assertions,
 	clist []*model.ContentDoc,
+	name, namespace string,
 ) {
-	nrxp := regexp.MustCompile(`gallery-\d+`)
+	nrxp := regexp.MustCompile(fmt.Sprintf(`%s-\d+`, name))
 	for idx, cnt := range clist {
 		assert.Equal(
 			cnt.Namespace,
-			"genome",
-			"should match the genome namespace",
+			namespace,
+			"should match the namespace",
 		)
-		assert.Regexp(nrxp, cnt.Name, "should match gallery names")
+		assert.Regexp(nrxp, cnt.Name, "should match names")
 		assert.Equal(
 			cnt.CreatedBy,
 			"content@content.org",
 			"should match the created_by",
 		)
 		if idx != 0 {
-			assert.Truef(
+			assert.True(
 				clist[idx-1].CreatedOn.After(clist[idx].CreatedOn),
-				"previous gallery record %s should be created after the current one %s",
-				clist[idx-1].CreatedOn.String(),
-				clist[idx].CreatedOn,
+				"previous record should be created after the current one",
 			)
 		}
 	}
