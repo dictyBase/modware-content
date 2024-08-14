@@ -93,7 +93,7 @@ func TestListContents(t *testing.T) {
 	t.Parallel()
 	assert, repo := setUp(t)
 	defer tearDown(repo)
-	for i := 0; i < 19; i++ {
+	for i := 0; i < 14; i++ {
 		_, err := repo.AddContent(
 			testutils.NewStoreContent(fmt.Sprintf("gallery-%d", i), "genome"),
 		)
@@ -107,21 +107,46 @@ func TestListContents(t *testing.T) {
 	assert.NoError(err, "expect no error from listing content")
 	assert.Len(clist, 5, "should have 5 content entries")
 	nrxp := regexp.MustCompile(`gallery-\d+`)
-	for _, cnt := range clist {
+	for idx, cnt := range clist {
 		assert.Equal(
 			cnt.Namespace,
 			"genome",
 			"should match the genome namespace",
 		)
 		assert.Regexp(nrxp, cnt.Name, "should match gallery names")
+		assert.Equal(
+			cnt.CreatedBy, "content@content.org", "should match the created_by",
+		)
+		if idx != 0 {
+			assert.True(
+				clist[idx-1].CreatedOn.After(clist[idx].CreatedOn),
+				"previous gallery record should be created after the current one",
+			)
+		}
 	}
-	assert.True(
-		clist[0].CreatedOn.After(clist[1].CreatedOn),
-		"first gallery record should be created after the second one",
+	clist2, err := repo.ListContents(
+		clist[len(clist)-1].CreatedOn.UnixMilli(),
+		5,
+		"",
 	)
-	assert.False(
-		clist[2].CreatedOn.After(clist[1].CreatedOn),
-		"third gallery record should not be created after the second one",
+	assert.NoError(err, "expect no error from listing content")
+	assert.Len(clist2, 6, "should have 6 content entries")
+	assert.Exactly(
+		clist[len(clist)-1],
+		clist2[0],
+		"should be identical content object",
+	)
+	clist3, err := repo.ListContents(
+		clist2[len(clist2)-1].CreatedOn.UnixMilli(),
+		7,
+		"",
+	)
+	assert.NoError(err, "expect no error from listing content")
+	assert.Len(clist3, 5, "should have 4 content entries")
+	assert.Exactly(
+		clist2[len(clist2)-1],
+		clist3[0],
+		"should be identical content object",
 	)
 }
 
