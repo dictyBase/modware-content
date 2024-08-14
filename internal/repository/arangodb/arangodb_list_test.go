@@ -18,14 +18,13 @@ func TestListContents(t *testing.T) {
 	defer tearDown(repo)
 
 	// Create test data
-	createTestContents(assert, repo, 14)
 	createCustomTestContents(assert, repo, 14, "gallery", "genome")
 
 	// Test initial list
 	clist, err := repo.ListContents(0, 4, "")
 	assert.NoError(err, "expect no error from listing content")
 	assert.Len(clist, 5, "should have 5 content entries")
-	validateContentList(assert, clist)
+	validateContentList(assert, clist, "gallery", "genome")
 
 	// Test pagination
 	clist2, err := repo.ListContents(
@@ -56,6 +55,52 @@ func TestListContents(t *testing.T) {
 	)
 }
 
+func TestListContentsWithFilter(t *testing.T) {
+	t.Parallel()
+	assert, repo := setUp(t)
+	defer tearDown(repo)
+
+	createCustomTestContents(assert, repo, 6, "sword", "longbottom")
+	createCustomTestContents(assert, repo, 8, "field", "drinkwater")
+
+	// Test list with filter
+	filter := `FILTER cnt.namespace == "longbottom"`
+	clist, err := repo.ListContents(0, 14, filter)
+	assert.NoError(err, "expect no error from listing content with filter")
+	assert.Len(clist, 6, "should have 5 content entries")
+	validateContentList(assert, clist, "sword", "longbottom")
+
+	// Test list with filter matching substring of slug
+	filter = `FILTER cnt.slug =~ "drink"`
+	clist, err = repo.ListContents(0, 15, filter)
+	assert.NoError(
+		err,
+		"expect no error from listing content with filter matching substring of slug",
+	)
+	assert.Len(clist, 8, "should have 8 content entries")
+	validateContentList(assert, clist, "field", "drinkwater")
+
+	// Test combination filter with multiple results
+	filter = `FILTER cnt.name =~ "sword-" AND cnt.namespace =~ "long"`
+	clist, err = repo.ListContents(0, 10, filter)
+	assert.NoError(
+		err,
+		"expect no error from listing content with combination filter (multiple results)",
+	)
+	assert.Len(clist, 6, "should have 6 content entries")
+	validateContentList(assert, clist, "sword", "longbottom")
+
+	// Test combination filter with no results
+	filter = `FILTER cnt.name == "sword-3" AND cnt.namespace =~ "drink"`
+	_, err = repo.ListContents(0, 10, filter)
+	assert.Error(
+		err,
+		"expect error from listing content with combination filter (no results)",
+	)
+	assert.True(
+		repository.IsContentListNotFound(err),
+		"should be list not found type of error",
+	)
 }
 
 func createCustomTestContents(
