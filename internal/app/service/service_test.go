@@ -297,7 +297,13 @@ func TestListContentsService(t *testing.T) {
 	client, assert := setup(t)
 
 	name, namespace := "catalog", "dsc"
-	storeMultipleContents(client, assert, 10, name, namespace)
+	storeMultipleContents(storeMultipleContentsParams{
+		Client:    client,
+		Assert:    assert,
+		Count:     10,
+		Name:      name,
+		Namespace: namespace,
+	})
 	resp, err := client.ListContents(
 		context.Background(),
 		&content.ListParameters{Limit: 5},
@@ -328,25 +334,28 @@ func validateListContents(params validateListContentsParams) {
 	}
 }
 
-func storeMultipleContents(
-	client content.ContentServiceClient,
-	assert *require.Assertions,
-	count int,
-	name, namespace string,
-) {
-	for i := 0; i < count; i++ {
-		_, err := client.StoreContent(
+type storeMultipleContentsParams struct {
+	Client    content.ContentServiceClient
+	Assert    *require.Assertions
+	Count     int
+	Name      string
+	Namespace string
+}
+
+func storeMultipleContents(params storeMultipleContentsParams) {
+	for i := 0; i < params.Count; i++ {
+		_, err := params.Client.StoreContent(
 			context.Background(),
 			&content.StoreContentRequest{
 				Data: &content.StoreContentRequest_Data{
 					Attributes: testutils.NewStoreContent(
-						fmt.Sprintf("%s-%d", name, i),
-						namespace,
+						fmt.Sprintf("%s-%d", params.Name, i),
+						params.Namespace,
 					),
 				},
 			},
 		)
-		assert.NoError(err, "expect no error from storing content")
+		params.Assert.NoError(err, "expect no error from storing content")
 	}
 }
 
