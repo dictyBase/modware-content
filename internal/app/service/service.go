@@ -132,7 +132,8 @@ func (srv *ContentService) buildContent(
 				UpdatedAt: aphgrpc.TimestampProto(mcont.UpdatedOn),
 				Content:   mcont.Content,
 			},
-		}}
+		},
+	}
 }
 
 func (srv *ContentService) StoreContent(
@@ -188,6 +189,56 @@ func (srv *ContentService) DeleteContent(
 	}
 
 	return &empty.Empty{}, nil
+}
+
+func (srv *ContentService) ListContents(
+	ctx context.Context,
+	req *content.ListParameters,
+) (*content.ContentCollection, error) {
+	limit := int64(10)
+	if req.Limit > 0 {
+		limit = req.Limit
+	}
+	astmt, err := filterStrToQuery(req.Filter)
+	if err != nil {
+		return nil, aphgrpc.HandleInvalidParamError(ctx, err)
+	}
+	cntModel, err := srv.repo.ListContents(req.Cursor, limit, astmt)
+	if err != nil {
+		if repository.IsContentListNotFound(err) {
+			return nil, aphgrpc.HandleNotFoundError(ctx, err)
+		}
+	}
+	cntDataSlice := make([]*content.ContentCollection_Data, 0)
+	for _, cntD := range cntModel {
+		cntDataSlice = append(cntDataSlice, &content.ContentCollection_Data{
+			Id: cntD.Key,
+			Attributes: &content.ContentAttributes{
+				Name:      cntD.Name,
+				Namespace: cntD.Namespace,
+				Slug:      cntD.Slug,
+				CreatedBy: cntD.CreatedBy,
+				UpdatedBy: cntD.UpdatedBy,
+				Content:   cntD.Content,
+				CreatedAt: aphgrpc.TimestampProto(cntD.CreatedOn),
+				UpdatedAt: aphgrpc.TimestampProto(cntD.UpdatedOn),
+			},
+		})
+	}
+
+	cnt := &content.ContentCollection{}
+	if len(cntDataSlice) < int(limit)-2 { // fewer result than limit
+		cnt.Data = cntDataSlice
+		cnt.Meta = &content.Meta{Limit: req.Limit}
+		return cnt, nil
+	}
+	cnt.Data = cntDataSlice[:len(cntDataSlice)-1]
+	cnt.Meta = &content.Meta{
+		Limit:      limit,
+		NextCursor: cntModel[len(cntModel)-1].CreatedOn.UnixMilli(),
+	}
+
+	return cnt, nil
 }
 
 func filterStrToQuery(filter string) (string, error) {
