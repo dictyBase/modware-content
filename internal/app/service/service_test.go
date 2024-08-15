@@ -283,6 +283,28 @@ func TestDeleteContent(t *testing.T) {
 	assert.NoError(err, "expect no error from deleting content")
 }
 
+type validateListContentsParams struct {
+	Assert    *require.Assertions
+	Data      []*content.ContentCollection_Data
+	NameRegex *regexp.Regexp
+	Namespace string
+}
+
+func validateListContents(params validateListContentsParams) {
+	for _, cnt := range params.Data {
+		params.Assert.Regexp(
+			params.NameRegex,
+			cnt.Attributes.Name,
+			"name should match",
+		)
+		params.Assert.Equal(
+			cnt.Attributes.Namespace,
+			params.Namespace,
+			"namespace should match",
+		)
+	}
+}
+
 func testContentProperties(
 	assert *require.Assertions,
 	sct, nct *content.Content,
