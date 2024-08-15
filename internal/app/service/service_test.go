@@ -3,8 +3,10 @@ package service
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"net"
 	"os"
+	"regexp"
 	"testing"
 	"time"
 
@@ -23,6 +25,13 @@ import (
 	"google.golang.org/grpc/status"
 	"google.golang.org/grpc/test/bufconn"
 )
+
+type validateListContentsParams struct {
+	Assert    *require.Assertions
+	Data      []*content.ContentCollection_Data
+	NameRegex *regexp.Regexp
+	Namespace string
+}
 
 type MockMessage struct{}
 
@@ -283,11 +292,25 @@ func TestDeleteContent(t *testing.T) {
 	assert.NoError(err, "expect no error from deleting content")
 }
 
-type validateListContentsParams struct {
-	Assert    *require.Assertions
-	Data      []*content.ContentCollection_Data
-	NameRegex *regexp.Regexp
-	Namespace string
+func TestListContentsService(t *testing.T) {
+	t.Parallel()
+	client, assert := setup(t)
+
+	name, namespace := "catalog", "dsc"
+	storeMultipleContents(client, assert, 10, name, namespace)
+	resp, err := client.ListContents(
+		context.Background(),
+		&content.ListParameters{Limit: 5},
+	)
+	assert.NoError(err, "expect no error from listing contents")
+	assert.Len(resp.Data, 5, "should return 5 contents")
+	nameRegex := regexp.MustCompile(fmt.Sprintf(`%s-\d+`, name))
+	validateListContents(validateListContentsParams{
+		Assert:    assert,
+		Data:      resp.Data,
+		NameRegex: nameRegex,
+		Namespace: namespace,
+	})
 }
 
 func validateListContents(params validateListContentsParams) {
