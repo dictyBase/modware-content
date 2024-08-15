@@ -6,11 +6,13 @@ import (
 	"strconv"
 
 	"github.com/dictyBase/aphgrpc"
+	"github.com/dictyBase/arangomanager/query"
 	"github.com/dictyBase/go-genproto/dictybaseapis/api/jsonapi"
 	"github.com/dictyBase/go-genproto/dictybaseapis/content"
 	"github.com/dictyBase/modware-content/internal/message"
 	"github.com/dictyBase/modware-content/internal/model"
 	"github.com/dictyBase/modware-content/internal/repository"
+	"github.com/dictyBase/modware-content/internal/repository/arangodb"
 	"github.com/go-playground/validator/v10"
 	"github.com/golang/protobuf/ptypes/empty"
 )
@@ -186,4 +188,21 @@ func (srv *ContentService) DeleteContent(
 	}
 
 	return &empty.Empty{}, nil
+}
+
+func filterStrToQuery(filter string) (string, error) {
+	var empty string
+	if len(filter) == 0 {
+		return empty, nil
+	}
+	p, err := query.ParseFilterString(filter)
+	if err != nil {
+		return empty, fmt.Errorf("error in parsing filter string")
+	}
+	q, err := query.GenQualifiedAQLFilterStatement(arangodb.FilterMap(), p)
+	if err != nil {
+		return empty, fmt.Errorf("error in generating aql statement")
+	}
+
+	return q, nil
 }
