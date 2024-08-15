@@ -4,7 +4,7 @@ require (
 	github.com/arangodb/go-driver v1.6.2
 	github.com/dictyBase/aphgrpc v1.4.2
 	github.com/dictyBase/arangomanager v0.4.0
-	github.com/dictyBase/go-genproto v0.0.0-20231030202356-522cb6f9976a
+	github.com/dictyBase/go-genproto v0.0.0-20240815171842-0da89d7f57e4
 	github.com/go-playground/validator/v10 v10.22.0
 	github.com/golang/protobuf v1.5.4
 	github.com/grpc-ecosystem/go-grpc-middleware v1.4.0
@@ -19,11 +19,13 @@ require (
 	github.com/arangodb/go-velocypack v0.0.0-20200318135517-5af53c29c67e // indirect
 	github.com/cpuguy83/go-md2man/v2 v2.0.4 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
+	github.com/emirpasic/gods v1.18.1 // indirect
 	github.com/fatih/structs v1.1.0 // indirect
 	github.com/gabriel-vasile/mimetype v1.4.3 // indirect
 	github.com/go-playground/locales v0.14.1 // indirect
 	github.com/go-playground/universal-translator v0.18.1 // indirect
 	github.com/gogo/protobuf v1.3.2 // indirect
+	github.com/jinzhu/now v1.1.5 // indirect
 	github.com/klauspost/compress v1.17.2 // indirect
 	github.com/leodido/go-urn v1.4.0 // indirect
 	github.com/mwitkow/go-proto-validators v0.2.0 // indirect
