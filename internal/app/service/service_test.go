@@ -305,6 +305,28 @@ func validateListContents(params validateListContentsParams) {
 	}
 }
 
+func storeMultipleContents(
+	client content.ContentServiceClient,
+	assert *require.Assertions,
+	count int,
+	name, namespace string,
+) {
+	for i := 0; i < count; i++ {
+		_, err := client.StoreContent(
+			context.Background(),
+			&content.StoreContentRequest{
+				Data: &content.StoreContentRequest_Data{
+					Attributes: testutils.NewStoreContent(
+						fmt.Sprintf("%s-%d", name, i),
+						namespace,
+					),
+				},
+			},
+		)
+		assert.NoError(err, "expect no error from storing content")
+	}
+}
+
 func testContentProperties(
 	assert *require.Assertions,
 	sct, nct *content.Content,
