@@ -352,7 +352,7 @@ func TestListContentsService(t *testing.T) {
 	)
 }
 
-func TestListContentsWithFilter(t *testing.T) {
+func TestListContentsServiceWithFilter(t *testing.T) {
 	t.Parallel()
 	client, assert := setup(t)
 
@@ -403,10 +403,16 @@ func TestListContentsWithFilter(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			resp, err := client.ListContents(context.Background(), &content.ListParameters{
-				Limit: 10, Filter: tc.filter,
-			})
-			assert.NoError(err, "expect no error from listing contents with filter")
+			resp, err := client.ListContents(
+				context.Background(),
+				&content.ListParameters{
+					Limit: 10, Filter: tc.filter,
+				},
+			)
+			assert.NoError(
+				err,
+				"expect no error from listing contents with filter",
+			)
 			assert.Len(resp.Data, 5, "should return 5 contents")
 			tc.check(assert, resp.Data)
 		})
