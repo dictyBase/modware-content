@@ -317,6 +317,39 @@ func TestListContentsService(t *testing.T) {
 		NameRegex: nameRegex,
 		Namespace: namespace,
 	})
+	assert.Greater(
+		resp.Meta.NextCursor,
+		int64(0),
+		"should have more record to fetch",
+	)
+	resp2, err := client.ListContents(
+		context.Background(),
+		&content.ListParameters{Limit: 7, Cursor: resp.Meta.NextCursor},
+	)
+	assert.NoError(err, "expect no error from listing contents")
+	assert.Len(resp2.Data, 5, "should return 5 contents")
+	validateListContents(validateListContentsParams{
+		Assert:    assert,
+		Data:      resp2.Data,
+		NameRegex: nameRegex,
+		Namespace: namespace,
+	})
+	assert.Equal(
+		resp2.Meta.NextCursor,
+		int64(0),
+		"should not have any more record to fetch",
+	)
+	resp2, err = client.ListContents(
+		context.Background(),
+		&content.ListParameters{Limit: 10},
+	)
+	assert.NoError(err, "expect no error from listing contents")
+	assert.Len(resp2.Data, 10, "should return 10 contents")
+	assert.Equal(
+		resp2.Meta.NextCursor,
+		int64(0),
+		"should not have any more record to fetch",
+	)
 }
 
 func validateListContents(params validateListContentsParams) {
