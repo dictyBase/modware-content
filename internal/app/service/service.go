@@ -227,17 +227,16 @@ func (srv *ContentService) ListContents(
 	}
 
 	cnt := &content.ContentCollection{}
-	if len(cntDataSlice) < int(limit)-2 { // fewer result than limit
-		cnt.Data = cntDataSlice
-		cnt.Meta = &content.Meta{Limit: req.Limit}
+	if len(cntDataSlice) == int(limit)+1 {
+		cnt.Data = cntDataSlice[:len(cntDataSlice)-1]
+		cnt.Meta = &content.Meta{
+			Limit:      limit,
+			NextCursor: cntModel[len(cntModel)-1].CreatedOn.UnixMilli(),
+		}
 		return cnt, nil
 	}
-	cnt.Data = cntDataSlice[:len(cntDataSlice)-1]
-	cnt.Meta = &content.Meta{
-		Limit:      limit,
-		NextCursor: cntModel[len(cntModel)-1].CreatedOn.UnixMilli(),
-	}
-
+	cnt.Data = cntDataSlice
+	cnt.Meta = &content.Meta{Limit: req.Limit}
 	return cnt, nil
 }
 
