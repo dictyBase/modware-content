@@ -200,6 +200,7 @@ func (srv *ContentService) ListContents(
 		if repository.IsContentListNotFound(err) {
 			return nil, aphgrpc.HandleNotFoundError(ctx, err)
 		}
+		return nil, aphgrpc.HandleGetError(ctx, err)
 	}
 	cntDataSlice := make([]*content.ContentCollection_Data, 0)
 	for _, cntD := range cntModel {
