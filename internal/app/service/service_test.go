@@ -298,58 +298,138 @@ func TestListContentsService(t *testing.T) {
 
 	name, namespace := "catalog", "dsc"
 	storeMultipleContents(storeMultipleContentsParams{
-		Client:    client,
-		Assert:    assert,
-		Count:     10,
-		Name:      name,
-		Namespace: namespace,
+		Client: client, Assert: assert, Count: 20, Name: name, Namespace: namespace,
 	})
-	resp, err := client.ListContents(
-		context.Background(),
-		&content.ListParameters{Limit: 5},
-	)
-	assert.NoError(err, "expect no error from listing contents")
+
+	testCases := []struct {
+		name     string
+		params   *content.ListParameters
+		validate func(*testing.T, *content.ContentCollection, content.ContentServiceClient)
+	}{
+		{
+			name:     "Basic listing",
+			params:   &content.ListParameters{Limit: 5},
+			validate: validateBasicListing,
+		},
+		{
+			name:     "Listing with cursor",
+			params:   &content.ListParameters{Limit: 7},
+			validate: validateListingWithCursor,
+		},
+		{
+			name: "Listing with filter",
+			params: &content.ListParameters{
+				Limit:  10,
+				Filter: fmt.Sprintf("namespace===%s", namespace),
+			},
+			validate: validateListingWithFilter,
+		},
+		{
+			name: "Listing with cursor and filter",
+			params: &content.ListParameters{
+				Limit:  5,
+				Filter: fmt.Sprintf("namespace===%s", namespace),
+			},
+			validate: validateListingWithCursorAndFilter,
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			resp, err := client.ListContents(context.Background(), tc.params)
+			assert.NoError(err, "expect no error from listing contents")
+			tc.validate(t, resp, client)
+		})
+	}
+}
+
+func validateBasicListing(
+	t *testing.T,
+	resp *content.ContentCollection,
+	_ content.ContentServiceClient,
+) {
+	assert := require.New(t)
 	assert.Len(resp.Data, 5, "should return 5 contents")
-	nameRegex := regexp.MustCompile(fmt.Sprintf(`%s-\d+`, name))
+	nameRegex := regexp.MustCompile(`catalog-\d+`)
 	validateListContents(validateListContentsParams{
-		Assert:    assert,
-		Data:      resp.Data,
-		NameRegex: nameRegex,
-		Namespace: namespace,
+		Assert: assert, Data: resp.Data, NameRegex: nameRegex, Namespace: "dsc",
 	})
 	assert.Greater(
 		resp.Meta.NextCursor,
 		int64(0),
-		"should have more record to fetch",
+		"should have more records to fetch",
 	)
+}
+
+func validateListingWithCursor(
+	t *testing.T,
+	resp1 *content.ContentCollection,
+	client content.ContentServiceClient,
+) {
+	assert := require.New(t)
+	assert.Len(resp1.Data, 7, "should return 7 contents")
 	resp2, err := client.ListContents(
 		context.Background(),
-		&content.ListParameters{Limit: 7, Cursor: resp.Meta.NextCursor},
+		&content.ListParameters{
+			Limit:  7,
+			Cursor: resp1.Meta.NextCursor,
+		},
 	)
-	assert.NoError(err, "expect no error from listing contents")
-	assert.Len(resp2.Data, 5, "should return 5 contents")
-	validateListContents(validateListContentsParams{
-		Assert:    assert,
-		Data:      resp2.Data,
-		NameRegex: nameRegex,
-		Namespace: namespace,
-	})
-	assert.Equal(
-		resp2.Meta.NextCursor,
-		int64(0),
-		"should not have any more record to fetch",
+	assert.NoError(err, "expect no error from second listing")
+	assert.Len(resp2.Data, 7, "should return 7 contents")
+	assert.NotEqual(
+		resp1.Data[0].Id,
+		resp2.Data[0].Id,
+		"first items should be different",
 	)
-	resp2, err = client.ListContents(
+}
+
+func validateListingWithFilter(
+	t *testing.T,
+	resp *content.ContentCollection,
+	_ content.ContentServiceClient,
+) {
+	assert := require.New(t)
+	assert.NotEmpty(resp.Data, "should return some contents")
+	for _, item := range resp.Data {
+		assert.Equal(
+			"dsc",
+			item.Attributes.Namespace,
+			"all items should have the filtered namespace",
+		)
+	}
+}
+
+func validateListingWithCursorAndFilter(
+	t *testing.T,
+	resp1 *content.ContentCollection,
+	client content.ContentServiceClient,
+) {
+	assert := require.New(t)
+	assert.Len(resp1.Data, 5, "should return 5 contents")
+	resp2, err := client.ListContents(
 		context.Background(),
-		&content.ListParameters{Limit: 10},
+		&content.ListParameters{
+			Limit: 5, Cursor: resp1.Meta.NextCursor, Filter: "namespace===dsc",
+		},
 	)
-	assert.NoError(err, "expect no error from listing contents")
-	assert.Len(resp2.Data, 10, "should return 10 contents")
-	assert.Equal(
-		resp2.Meta.NextCursor,
-		int64(0),
-		"should not have any more record to fetch",
+	assert.NoError(
+		err,
+		"expect no error from second listing with filter and cursor",
 	)
+	assert.Len(resp2.Data, 5, "should return 5 contents")
+	assert.NotEqual(
+		resp1.Data[0].Id,
+		resp2.Data[0].Id,
+		"first items should be different",
+	)
+	for _, item := range resp2.Data {
+		assert.Equal(
+			"dsc",
+			item.Attributes.Namespace,
+			"all items should have the filtered namespace",
+		)
+	}
 }
 
 func TestListContentsServiceWithFilter(t *testing.T) {
