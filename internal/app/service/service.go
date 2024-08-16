@@ -247,11 +247,11 @@ func filterStrToQuery(filter string) (string, error) {
 	}
 	p, err := query.ParseFilterString(filter)
 	if err != nil {
-		return empty, fmt.Errorf("error in parsing filter string")
+		return empty, fmt.Errorf("error in parsing filter string %w", err)
 	}
 	q, err := query.GenQualifiedAQLFilterStatement(arangodb.FilterMap(), p)
 	if err != nil {
-		return empty, fmt.Errorf("error in generating aql statement")
+		return empty, fmt.Errorf("error in generating aql statement %w", err)
 	}
 
 	return q, nil
