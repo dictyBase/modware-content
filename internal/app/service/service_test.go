@@ -352,6 +352,74 @@ func TestListContentsService(t *testing.T) {
 	)
 }
 
+func TestListContentsWithFilter(t *testing.T) {
+	t.Parallel()
+	client, assert := setup(t)
+
+	// Store contents with different namespaces
+	storeMultipleContents(storeMultipleContentsParams{
+		Client: client, Assert: assert, Count: 5,
+		Name: "catalog", Namespace: "dsc",
+	})
+	storeMultipleContents(storeMultipleContentsParams{
+		Client: client, Assert: assert, Count: 5,
+		Name: "page", Namespace: "dicty",
+	})
+
+	testCases := []struct {
+		name   string
+		filter string
+		check  func(*require.Assertions, []*content.ContentCollection_Data)
+	}{
+		{
+			name:   "Filter by namespace",
+			filter: "namespace===dsc",
+			check: func(assert *require.Assertions, data []*content.ContentCollection_Data) {
+				for _, item := range data {
+					assert.Equal(item.Attributes.Namespace, "dsc")
+				}
+			},
+		},
+		{
+			name:   "Filter by name",
+			filter: "name=~page",
+			check: func(assert *require.Assertions, data []*content.ContentCollection_Data) {
+				for _, item := range data {
+					assert.Contains(item.Attributes.Name, "page")
+				}
+			},
+		},
+		{
+			name:   "Combined filter",
+			filter: "namespace===dicty;name=~page",
+			check: func(assert *require.Assertions, data []*content.ContentCollection_Data) {
+				for _, item := range data {
+					assert.Equal(item.Attributes.Namespace, "dicty")
+					assert.Contains(item.Attributes.Name, "page")
+				}
+			},
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			resp, err := client.ListContents(context.Background(), &content.ListParameters{
+				Limit: 10, Filter: tc.filter,
+			})
+			assert.NoError(err, "expect no error from listing contents with filter")
+			assert.Len(resp.Data, 5, "should return 5 contents")
+			tc.check(assert, resp.Data)
+		})
+	}
+
+	// Test filter with no results
+	_, err := client.ListContents(context.Background(), &content.ListParameters{
+		Limit: 10, Filter: "namespace===nonexistent",
+	})
+	assert.Error(err, "expect an error when no results are found")
+	assert.Equal(codes.NotFound, status.Code(err), "error should be NotFound")
+}
+
 func validateListContents(params validateListContentsParams) {
 	for _, cnt := range params.Data {
 		params.Assert.Regexp(
