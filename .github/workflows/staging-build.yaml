@@ -5,7 +5,7 @@ on:
       - staging
 jobs:
   call-build-deploy:
-    uses: dictyBase/workflows/.github/workflows/composite-deploy.yaml@main
+    uses: dictyBase/workflows/.github/workflows/composite-deploy.yaml@develop
     secrets: inherit
     with:
       app: content
