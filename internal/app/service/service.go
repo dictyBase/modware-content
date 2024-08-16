@@ -7,7 +7,6 @@ import (
 
 	"github.com/dictyBase/aphgrpc"
 	"github.com/dictyBase/arangomanager/query"
-	"github.com/dictyBase/go-genproto/dictybaseapis/api/jsonapi"
 	"github.com/dictyBase/go-genproto/dictybaseapis/content"
 	"github.com/dictyBase/modware-content/internal/message"
 	"github.com/dictyBase/modware-content/internal/model"
@@ -59,13 +58,6 @@ func NewContentService(srvP *Params) (*ContentService, error) {
 		publisher: srvP.Publisher,
 		group:     srvP.Group,
 	}, nil
-}
-
-func (srv *ContentService) Healthz(
-	ctx context.Context,
-	rdr *jsonapi.HealthzIdRequest,
-) (*empty.Empty, error) {
-	return &empty.Empty{}, nil
 }
 
 func (srv *ContentService) GetContentBySlug(
