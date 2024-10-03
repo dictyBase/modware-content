@@ -33,15 +33,24 @@ jobs:
         with:
           file: ./profile.cov
           token: ${{ secrets.CODECOV }}
-  call-build-deploy:
-    needs: test
-    uses: dictyBase/workflows/.github/workflows/composite-deploy.yaml@develop
+  call-docker-build:
+    uses: dictyBase/workflows/.github/workflows/build-publish-image.yaml@develop
     secrets: inherit
     with:
-      app: content
       repository: ${{ github.repository }}
       ref: ${{ github.ref_name }}
+      image: modware-content
       dockerfile: build/package/Dockerfile 
-      docker_image: modware-content
-      cluster: ${{ vars.DEV_STAGING_CLUSTER }}
-      cluster_state_storage: ${{ vars.DEV_STAGING_KOPS_STATE_STORAGE }}
+      namespace: dictybase
+  # call-build-deploy:
+  #   needs: test
+  #   uses: dictyBase/workflows/.github/workflows/composite-deploy.yaml@develop
+  #   secrets: inherit
+  #   with:
+  #     app: content
+  #     repository: ${{ github.repository }}
+  #     ref: ${{ github.ref_name }}
+  #     dockerfile: build/package/Dockerfile 
+  #     docker_image: modware-content
+  #     cluster: ${{ vars.DEV_STAGING_CLUSTER }}
+  #     cluster_state_storage: ${{ vars.DEV_STAGING_KOPS_STATE_STORAGE }}
