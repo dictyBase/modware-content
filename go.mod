@@ -4,7 +4,7 @@ require (
 	github.com/arangodb/go-driver v1.6.4
 	github.com/dictyBase/aphgrpc v1.4.2
 	github.com/dictyBase/arangomanager v0.4.0
-	github.com/dictyBase/go-genproto v0.0.0-20240815171842-0da89d7f57e4
+	github.com/dictyBase/go-genproto v0.0.0-20240820162539-df6434865685
 	github.com/go-playground/validator/v10 v10.22.1
 	github.com/golang/protobuf v1.5.4
 	github.com/grpc-ecosystem/go-grpc-middleware v1.4.0
@@ -43,6 +43,6 @@ require (
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
 
-go 1.21
+go 1.22.5
 
-toolchain go1.22.4
+toolchain go1.22.6

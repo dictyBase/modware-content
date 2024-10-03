@@ -28,6 +28,8 @@ github.com/dictyBase/arangomanager v0.4.0 h1:+HgmadUY0qXFMLfZocktynbERkX/FgWzC3v
 github.com/dictyBase/arangomanager v0.4.0/go.mod h1:SmElsQJN3EbTjfYCkjS7/uyUkNVwaO2qJB9Mqrs0ND8=
 github.com/dictyBase/go-genproto v0.0.0-20240815171842-0da89d7f57e4 h1:kxY0rlODJu8qk5jXv9dzeOpOl3hV8r66y1YByPKCDIs=
 github.com/dictyBase/go-genproto v0.0.0-20240815171842-0da89d7f57e4/go.mod h1:KY6iUqXl1lLq81WTW9u5DfZE58xM61PsGLSLwwtePlk=
+github.com/dictyBase/go-genproto v0.0.0-20240820162539-df6434865685 h1:PONLj9mPSg5xA5/3v1J3DTEZFd6CZfg1QTCgBjgfLu8=
+github.com/dictyBase/go-genproto v0.0.0-20240820162539-df6434865685/go.mod h1:Kz1i0ZDYaMFdDOK9F7URWA8CV5tU/DIUeR2BQma6SXY=
 github.com/emirpasic/gods v1.18.1 h1:FXtiHYKDGKCW2KzwZKx0iC0PQmdlorYgdFG9jPXJ1Bc=
 github.com/emirpasic/gods v1.18.1/go.mod h1:8tpGGwCnJ5H4r6BWwaV6OrWmMoPhUl5jm/FMNAnJvWQ=
 github.com/envoyproxy/go-control-plane v0.9.0/go.mod h1:YTl/9mNaCwkRvm6d1a2C3ymFceY/DCBVvsKhRF0iEA4=
