@@ -42,15 +42,17 @@ jobs:
       image: modware-content
       dockerfile: build/package/Dockerfile 
       namespace: dictybase
-  # call-build-deploy:
-  #   needs: test
-  #   uses: dictyBase/workflows/.github/workflows/composite-deploy.yaml@develop
-  #   secrets: inherit
-  #   with:
-  #     app: content
-  #     repository: ${{ github.repository }}
-  #     ref: ${{ github.ref_name }}
-  #     dockerfile: build/package/Dockerfile 
-  #     docker_image: modware-content
-  #     cluster: ${{ vars.DEV_STAGING_CLUSTER }}
-  #     cluster_state_storage: ${{ vars.DEV_STAGING_KOPS_STATE_STORAGE }}
+  call-build-deploy:
+    needs: test
+    uses: dictyBase/workflows/.github/workflows/composite-deploy.yaml@develop
+    secrets: inherit
+    with:
+      app: content
+      project: modware-content
+      stack: experiments
+      repository: ${{ github.repository }}
+      ref: ${{ github.ref_name }}
+      dockerfile: build/package/Dockerfile 
+      docker_image: modware-content
+      cluster: ${{ vars.DEV_STAGING_CLUSTER }}
+      cluster_state_storage: ${{ vars.DEV_STAGING_KOPS_STATE_STORAGE }}
