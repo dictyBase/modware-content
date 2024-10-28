@@ -8,7 +8,7 @@ jobs:
     runs-on: ubuntu-latest
     services:
       arangodb:
-        image: arangodb:3.10.9
+        image: arangodb:3.11
         env:
           ARANGO_ROOT_PASSWORD: rootpass
         ports:
@@ -39,6 +39,8 @@ jobs:
     secrets: inherit
     with:
       app: content
+      project: modware-content
+      stack: experiments
       repository: ${{ github.repository }}
       ref: ${{ github.ref_name }}
       dockerfile: build/package/Dockerfile 
