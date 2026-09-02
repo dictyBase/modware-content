@@ -15,11 +15,11 @@ jobs:
           - 8529/tcp
     steps:
       - name: set up golang
-        uses: actions/setup-go@v5
+        uses: actions/setup-go@v6
         with:
           go-version: '~1.26'
       - name: check out code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
       - name: unit test
         run: go test -parallel 4 -covermode=atomic -coverprofile=profile.cov -v ./...
         env:
