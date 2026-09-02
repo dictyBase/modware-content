@@ -4,17 +4,9 @@ on:
     branches-ignore:
       - master
 jobs:
-  lint:
-    runs-on: ubuntu-20.04
-    steps:
-      - name: check out code
-        uses: actions/checkout@v4
-      - uses: actions/setup-go@v5
-        with:
-          go-version: '1.21'
-          cache: false
-      - run: go version
-      - name: run linter
-        uses: golangci/golangci-lint-action@v6
-        with: 
-          version: v1.58.2
+  call-lint:
+    uses: dictyBase/workflows/.github/workflows/golang-lint.yaml@develop
+    with:
+      repository: ${{ github.repository }}
+      ref: ${{ github.event.pull_request.head.sha }}
+      version: v2.12.2-alpine
