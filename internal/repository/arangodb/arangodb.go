@@ -47,7 +47,7 @@ func NewContentRepo(
 	arp.content = contentCollection
 	_, _, err = dbs.EnsurePersistentIndex(
 		collection,
-		[]string{"slug"},
+		[]string{keySlug},
 		&driver.EnsurePersistentIndexOptions{
 			Unique:       true,
 			InBackground: true,
@@ -62,7 +62,7 @@ func NewContentRepo(
 	}
 	_, _, err = dbs.EnsurePersistentIndex(
 		collection,
-		[]string{"namespace"},
+		[]string{keyNamespace},
 		&driver.EnsurePersistentIndexOptions{
 			InBackground: true,
 			Name:         "content_namespace_idx",
@@ -84,9 +84,9 @@ func (arp *arangorepository) GetContentBySlug(
 	cntModel := &model.ContentDoc{}
 	resp, err := arp.database.GetRow(
 		ContentFindBySlug,
-		map[string]interface{}{
-			"@content_collection": arp.content.Name(),
-			"slug":                slug,
+		map[string]any{
+			keyContentCollection: arp.content.Name(),
+			keySlug:              slug,
 		},
 	)
 	if err != nil {
@@ -163,14 +163,14 @@ func (arp *arangorepository) AddContent(
 	cntModel := &model.ContentDoc{}
 	res, err := arp.database.DoRun(
 		ContentInsert,
-		map[string]interface{}{
-			"name":                cattr.Name,
-			"namespace":           cattr.Namespace,
-			"created_by":          cattr.CreatedBy,
-			"updated_by":          cattr.CreatedBy,
-			"content":             cattr.Content,
-			"slug":                cattr.Slug,
-			"@content_collection": arp.content.Name(),
+		map[string]any{
+			"name":               cattr.Name,
+			keyNamespace:         cattr.Namespace,
+			"created_by":         cattr.CreatedBy,
+			"updated_by":         cattr.CreatedBy,
+			"content":            cattr.Content,
+			keySlug:              cattr.Slug,
+			keyContentCollection: arp.content.Name(),
 		},
 	)
 	if err != nil {
@@ -193,11 +193,11 @@ func (arp *arangorepository) EditContent(
 	cntModel := &model.ContentDoc{}
 	res, err := arp.database.DoRun(
 		ContentUpdate,
-		map[string]interface{}{
-			"key":                 strconv.FormatInt(cid, 10),
-			"updated_by":          cattr.UpdatedBy,
-			"content":             cattr.Content,
-			"@content_collection": arp.content.Name(),
+		map[string]any{
+			"key":                strconv.FormatInt(cid, 10),
+			"updated_by":         cattr.UpdatedBy,
+			"content":            cattr.Content,
+			keyContentCollection: arp.content.Name(),
 		},
 	)
 	if err != nil {
@@ -222,9 +222,9 @@ func (arp *arangorepository) ListContents(
 	limit int64,
 	filter string,
 ) ([]*model.ContentDoc, error) {
-	bindVars := map[string]interface{}{
-		"@content_collection": arp.content.Name(),
-		"limit":               limit + 1,
+	bindVars := map[string]any{
+		keyContentCollection: arp.content.Name(),
+		"limit":              limit + 1,
 	}
 	if cursor != 0 {
 		bindVars["cursor"] = cursor
