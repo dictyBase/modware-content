@@ -181,7 +181,7 @@ func createCustomTestContents(
 	count int,
 	name, namespace string,
 ) {
-	for i := 0; i < count; i++ {
+	for i := range count {
 		time.Sleep(1 * time.Millisecond)
 		_, err := repo.AddContent(
 			testutils.NewStoreContent(fmt.Sprintf("%s-%d", name, i), namespace),

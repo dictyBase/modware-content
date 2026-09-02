@@ -6,11 +6,11 @@ import (
 	"github.com/dictyBase/go-genproto/dictybaseapis/content"
 	"github.com/dictyBase/modware-content/internal/message"
 	gnats "github.com/nats-io/nats.go"
-	"github.com/nats-io/nats.go/encoders/protobuf"
+	"google.golang.org/protobuf/proto"
 )
 
 type natsPublisher struct {
-	econn *gnats.EncodedConn
+	conn *gnats.Conn
 }
 
 func NewPublisher(
@@ -26,19 +26,19 @@ func NewPublisher(
 			err,
 		)
 	}
-	ec, err := gnats.NewEncodedConn(ncr, protobuf.PROTOBUF_ENCODER)
-	if err != nil {
-		return &natsPublisher{}, fmt.Errorf("error in encoding %s", err)
-	}
 
-	return &natsPublisher{econn: ec}, nil
+	return &natsPublisher{conn: ncr}, nil
 }
 
 func (n *natsPublisher) Publish(
 	subj string,
 	cont *content.Content,
 ) error {
-	if err := n.econn.Publish(subj, cont); err != nil {
+	data, err := proto.Marshal(cont)
+	if err != nil {
+		return fmt.Errorf("error in marshaling content %s", err)
+	}
+	if err := n.conn.Publish(subj, data); err != nil {
 		return fmt.Errorf("error in publishing through nats %s", err)
 	}
 
@@ -46,7 +46,7 @@ func (n *natsPublisher) Publish(
 }
 
 func (n *natsPublisher) Close() error {
-	n.econn.Close()
+	n.conn.Close()
 
 	return nil
 }
