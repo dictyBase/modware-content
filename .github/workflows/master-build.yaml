@@ -1,0 +1,16 @@
+name: Build and Publish Image
+on:
+  push:
+    branches:
+      - master
+    tags:
+      - "*"
+jobs:
+  build-publish-image:
+    uses: dictyBase/workflows/.github/workflows/build-publish-image.yaml@develop
+    secrets: inherit
+    with:
+      repository: ${{ github.repository }}
+      image: modware-content
+      ref: ${{ github.ref_name }}
+      dockerfile: build/package/Dockerfile
