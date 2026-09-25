@@ -158,9 +158,11 @@ func TestEditContent(t *testing.T) {
 		"update and creation email should not match",
 	)
 	assert.Equal([]byte(sct.Content), cdata, "should match updated content")
-	assert.True(
-		sct.UpdatedOn.After(sct.CreatedOn),
-		"should have correct updated timestamp",
+	// ArangoDB DATE_NOW() has millisecond resolution, so an add followed
+	// immediately by an edit can legitimately share the same timestamp.
+	assert.False(
+		sct.UpdatedOn.Before(sct.CreatedOn),
+		"updated timestamp should not precede created timestamp",
 	)
 	assert.Equal(sct.Name, nct.Name, "name should match")
 	assert.Equal(sct.Namespace, nct.Namespace, "namespace should match")
