@@ -1,0 +1,75 @@
+# Template for the service-repo tag workflow.
+# Rendered by `just ci render-tag-deploy` — same job shape as ci.yml:
+# test + lint gate, then the composite deploy, pointed at a production
+# cluster through the <CI_ENV>_* repo variables. The old build-publish-image
+# call is gone: the composite builds and publishes the image itself.
+name: Tag Build
+on:
+  push:
+    tags: ['*']
+
+concurrency:
+  group: deploy-${{ github.repository }}-${{ github.ref_name }}
+  cancel-in-progress: false
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    services:
+      arangodb:
+        image: arangodb:3.12.12
+        env:
+          ARANGO_ROOT_PASSWORD: rootpass
+        ports:
+          - 8529/tcp
+    steps:
+      - name: check out code
+        uses: actions/checkout@v7
+      - name: set up golang
+        uses: actions/setup-go@v7
+        with:
+          go-version: '~1.26'
+      - run: go version
+      - name: unit test
+        run: go test -covermode=atomic -coverprofile=profile.cov -v ./...
+        env:
+          ARANGO_USER: root
+          ARANGO_PASS: rootpass
+          ARANGO_HOST: localhost
+          ARANGO_PORT: ${{ job.services.arangodb.ports[8529] }}
+      - name: upload coverage to codecov
+        uses: codecov/codecov-action@v7
+        with:
+          file: ./profile.cov
+          token: ${{ secrets.CODECOV }}
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - name: check out code
+        uses: actions/checkout@v7
+      - name: set up golang
+        uses: actions/setup-go@v7
+        with:
+          go-version: '~1.26'
+      - name: golangci-lint
+        uses: golangci/golangci-lint-action@v8
+        with:
+          version: v2.14.0
+  call-build-deploy:
+    needs: [test, lint]
+    uses: dictyBase/workflows/.github/workflows/composite-deploy.yaml@develop
+    secrets: inherit
+    with:
+      app: content
+      project: modware-content
+      stack: dcr-kube1
+      repository: ${{ github.repository }}
+      ref: ${{ github.ref_name }}
+      dockerfile: build/package/Dockerfile
+      docker_image: modware-content
+      cluster: ${{ vars.PROD_CLUSTER }}
+      cluster_state_storage: ${{ vars.PROD_KOPS_STATE_STORAGE }}
+      kops_version: ${{ vars.PROD_KOPS_VERSION }}
+      kubectl_version: ${{ vars.PROD_KUBECTL_VERSION }}
+      pulumi_version: ${{ vars.PROD_PULUMI_VERSION }}
+      environment: production
